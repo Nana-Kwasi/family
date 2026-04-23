@@ -1,0 +1,9 @@
+{
+  "Sunday": {"male":"Kwasi","female":"Akosua"},
+  "Monday": {"male":"Kwadwo","female":"Adwoa"},
+  "Tuesday": {"male":"Kwabena","female":"Abena"},
+  "Wednesday": {"male":"Kwaku","female":"Akua"},
+  "Thursday": {"male":"Yaw","female":"Yaa"},
+  "Friday": {"male":"Kofi","female":"Afia"},
+  "Saturday": {"male":"Kwame","female":"Ama"}
+}

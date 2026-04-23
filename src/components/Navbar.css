@@ -1,0 +1,196 @@
+.navbar {
+  position: fixed;
+  top: 38px;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(20, 13, 7, 0.97);
+  border-bottom: 1px solid rgba(201, 165, 88, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 500;
+  backdrop-filter: blur(10px);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #C9A558;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-logo-icon { color: #C9A558; display: flex; align-items: center; }
+.nav-logo-text {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: #C9A558;
+}
+
+.nav-desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: #BA9D7C;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  text-transform: uppercase;
+}
+.nav-link:hover { color: #C9A558; }
+.nav-link-active { color: #C9A558 !important; }
+
+.nav-cart-link {
+  display: flex;
+  align-items: center;
+  color: #BA9D7C;
+  padding: 6px 12px;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-cart-link:hover { color: #C9A558; }
+
+.cart-badge {
+  position: absolute;
+  top: 0px;
+  right: 2px;
+  background: #C9A558;
+  color: #1a1000;
+  border-radius: 50%;
+  width: 17px;
+  height: 17px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nav-user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+.nav-user-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #C9A558;
+  text-transform: uppercase;
+}
+.nav-logout-btn {
+  background: transparent;
+  border: 1px solid rgba(201,165,88,0.3);
+  color: #BA9D7C;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.nav-logout-btn:hover { border-color: #C9A558; color: #C9A558; }
+
+.nav-mobile-right {
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+.nav-hamburger {
+  background: transparent;
+  border: none;
+  color: #C9A558;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.nav-mobile-menu {
+  position: fixed;
+  top: 108px;
+  left: 0;
+  right: 0;
+  background: rgba(20, 13, 7, 0.99);
+  border-bottom: 1px solid rgba(201,165,88,0.2);
+  padding: 12px 24px 28px;
+  z-index: 499;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(8px);
+}
+.mobile-nav-link {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: #BA9D7C;
+  text-decoration: none;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(201,165,88,0.1);
+  text-transform: uppercase;
+  display: block;
+  transition: color 0.2s;
+}
+.mobile-nav-link:hover, .mobile-nav-link-active { color: #C9A558; }
+.mobile-user-name {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #C9A558;
+  padding: 16px 0 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(201,165,88,0.1);
+}
+.mobile-logout-btn {
+  background: transparent;
+  border: 1px solid rgba(201,165,88,0.3);
+  color: #BA9D7C;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 100%;
+  text-align: center;
+  margin-top: 16px;
+  transition: all 0.2s;
+}
+.mobile-logout-btn:hover { border-color: #C9A558; color: #C9A558; }
+
+.nav-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(201,165,88,0.75);
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .navbar { padding: 0 16px; }
+  .nav-desktop-links { display: none; }
+  .nav-mobile-right { display: flex; }
+  .nav-tagline { display: none; }
+  .nav-logo img { height: 48px !important; width: 48px !important; }
+}
+@media (min-width: 769px) {
+  .nav-mobile-menu { display: none; }
+}
