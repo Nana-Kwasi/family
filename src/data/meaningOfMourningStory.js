@@ -15,6 +15,12 @@ export const meaningOfMourningBlocks = [
       'In Akan society in Ghana, funerals are far more than occasions of sorrow. They are among the most important cultural gatherings in public life—moments when family, community, history, spirituality, and dignity all meet in one solemn, powerful space. To an outsider, an Akan funeral may seem lavish: royal umbrellas floating above chiefs and queen mothers, mourners wrapped in black and red Adinkra cloth, women adorned with beads, elders seated in stately composure, and a bereaved family dressed in deep mourning black. But beneath the beauty lies something far more profound. An Akan funeral is not a performance for its own sake. It is an act of honor.\n\nIt is where grief is made visible, where the dead are escorted into memory, and where the living prove that no one passes from this world without witness.',
   },
   {
+    type: 'figure',
+    src: `${base}/images/f9.jpeg`,
+    alt: 'Akan traditional funeral scene',
+    caption: 'Akan traditional funeral scene.',
+  },
+  {
     type: 'h2',
     text: 'More Than Ceremony: The Akan Funeral as Social Duty',
   },
@@ -59,13 +65,18 @@ export const meaningOfMourningBlocks = [
   {
     type: 'p',
     text:
-      'One of the most striking dimensions of an Akan funeral is its visual richness. In Ghana, and especially among the Akan, cloth speaks. It conveys emotion, rank, relationship, and occasion.\n\nThe bereaved family may sit together in solid black, their appearance restrained, sorrowful, and composed. Their clothing often signals the full weight of loss. Around them, mourners appear in black and red cloths—colors associated with intense grief and mourning. In other contexts, black and white may be worn, especially when the funeral mood also carries remembrance, honor, and the celebration of a long life.\n\nAdinkra cloth, with its symbolic motifs, adds another layer of meaning. These patterns are not merely decorative. They can suggest endurance, the brevity of life, the presence of God, wisdom, resilience, and the continuity of the soul. Beads, gold-toned jewelry, sandals, and finely wrapped cloth all contribute to a visual language of noble mourning. The textures—solid black, deep red, black and white contrasts, polished beadwork, soft woven surfaces—create an atmosphere that is at once somber and majestic.\n\nThis is why Akan funerals are often so visually unforgettable: grief is expressed not in chaos, but in form.',
+      'One of the most striking dimensions of an Akan funeral is its visual richness. In Ghana, and especially among the Akan, cloth speaks. It conveys emotion, rank, relationship, and occasion.\n\nThe bereaved family may sit together in solid black, their appearance restrained, sorrowful, and composed. Their clothing often signals the full weight of loss. Around them, mourners appear in black and red cloths—colors associated with intense grief and mourning. In other contexts, black and white may be worn, especially when the funeral mood also carries remembrance, honor, and the celebration of a long life.',
   },
   {
     type: 'figure',
-    src: `${base}/images/f9.jpeg`,
-    alt: 'Akan traditional funeral scene',
-    caption: 'Akan traditional funeral scene.',
+    src: `${base}/images/f6.jpeg`,
+    alt: 'Figurative fantasy coffin',
+    caption: 'Figurative fantasy coffin — Greater Accra.',
+  },
+  {
+    type: 'p',
+    text:
+      'Adinkra cloth, with its symbolic motifs, adds another layer of meaning. These patterns are not merely decorative. They can suggest endurance, the brevity of life, the presence of God, wisdom, resilience, and the continuity of the soul. Beads, gold-toned jewelry, sandals, and finely wrapped cloth all contribute to a visual language of noble mourning. The textures—solid black, deep red, black and white contrasts, polished beadwork, soft woven surfaces—create an atmosphere that is at once somber and majestic.\n\nThis is why Akan funerals are often so visually unforgettable: grief is expressed not in chaos, but in form.',
   },
   {
     type: 'h2',
@@ -74,7 +85,18 @@ export const meaningOfMourningBlocks = [
   {
     type: 'p',
     text:
-      'When chiefs and queen mothers attend a funeral, their presence carries immense significance. They do not simply “grace the occasion”; they stand as visible representatives of communal respect and traditional authority. Their arrival may include attendants, ceremonial staffs, linguists, royal sandals, and elaborately decorated umbrellas held above them.\n\nThe umbrella in Akan political culture is not just an accessory. It is a symbol of status, shelter, and sacred presence. At a funeral, it signals that mourning has become a matter of communal recognition. The bereaved are not left alone in private pain. Authority itself has come to stand with them.\n\nThese details matter because hierarchy is an important part of Akan ceremonial life. Seating, greetings, posture, entourage, and attire all reflect social order. Yet this hierarchy does not diminish the humanity of the event. Rather, it frames it in dignity. The family’s grief is recognized publicly, respectfully, and with full cultural weight.',
+      'When chiefs and queen mothers attend a funeral, their presence carries immense significance. They do not simply “grace the occasion”; they stand as visible representatives of communal respect and traditional authority. Their arrival may include attendants, ceremonial staffs, linguists, royal sandals, and elaborately decorated umbrellas held above them.\n\nThe umbrella in Akan political culture is not just an accessory. It is a symbol of status, shelter, and sacred presence. At a funeral, it signals that mourning has become a matter of communal recognition. The bereaved are not left alone in private pain. Authority itself has come to stand with them.',
+  },
+  {
+    type: 'figure',
+    src: `${base}/images/f7.jpeg`,
+    alt: 'Figurative fantasy coffin',
+    caption: 'Figurative fantasy coffin — Greater Accra.',
+  },
+  {
+    type: 'p',
+    text:
+      'These details matter because hierarchy is an important part of Akan ceremonial life. Seating, greetings, posture, entourage, and attire all reflect social order. Yet this hierarchy does not diminish the humanity of the event. Rather, it frames it in dignity. The family’s grief is recognized publicly, respectfully, and with full cultural weight.',
   },
   {
     type: 'h2',
@@ -83,7 +105,18 @@ export const meaningOfMourningBlocks = [
   {
     type: 'p',
     text:
-      'To many non-Ghanaians, one of the most surprising aspects of Ghanaian funerals is that grief may be accompanied by drumming, singing, movement, and social gathering. But in Akan culture, sorrow does not have to be quiet to be sincere. Mourning can be spoken, sung, danced, wept, and wrapped in ritual. It can be solemn and social at once.\n\nThere are moments of profound sadness, but also moments of reunion, storytelling, cultural expression, and public memory. Relatives who have not seen one another in years may meet again at a funeral. Family history is retold. Old obligations are renewed. Social fractures may soften under the gravity of loss.\n\nA funeral, then, becomes a stage not of vanity, but of truth: this was a life, these were its people, and this is how they came to honor it.',
+      'To many non-Ghanaians, one of the most surprising aspects of Ghanaian funerals is that grief may be accompanied by drumming, singing, movement, and social gathering. But in Akan culture, sorrow does not have to be quiet to be sincere. Mourning can be spoken, sung, danced, wept, and wrapped in ritual. It can be solemn and social at once.\n\nThere are moments of profound sadness, but also moments of reunion, storytelling, cultural expression, and public memory. Relatives who have not seen one another in years may meet again at a funeral. Family history is retold. Old obligations are renewed. Social fractures may soften under the gravity of loss.',
+  },
+  {
+    type: 'figure',
+    src: `${base}/images/f8.jpeg`,
+    alt: 'Figurative fantasy coffin',
+    caption: 'Figurative fantasy coffin — Greater Accra.',
+  },
+  {
+    type: 'p',
+    text:
+      'A funeral, then, becomes a stage not of vanity, but of truth: this was a life, these were its people, and this is how they came to honor it.',
   },
   {
     type: 'h2',
@@ -110,7 +143,7 @@ export const meaningOfMourningBlocks = [
   {
     type: 'p',
     text:
-      'No discussion of funeral culture in Ghana is complete without mentioning the extraordinary figurative coffins made in the Greater Accra Region, especially among Ga communities. Often called “fantasy coffins,” these handcrafted caskets are designed in shapes that reflect the life, profession, dreams, or identity of the deceased.\n\nA fisherman may be buried in a coffin shaped like a canoe or fish. A farmer may be honored with a cocoa pod or ear of corn. A driver may have a car-shaped casket. A trader in beverages might be buried in a bottle-shaped casket. A devout Christian might be laid to rest in a Bible-shaped casket. These designs are both artistic and deeply personal.\n\nTo many non-Ghanaians, this practice is astonishing and fascinating. Yet it is rooted in an understandable idea: the final vessel of the dead should tell the story of who they were. Rather than erasing individuality, the coffin reflects it.',
+      'No discussion of funeral culture in Ghana is complete without mentioning the extraordinary figurative coffins made in the Greater Accra Region, especially among Ga communities. Often called “fantasy coffins,” these handcrafted caskets are designed in shapes that reflect the life, profession, dreams, or identity of the deceased.\n\nA fisherman may be buried in a coffin shaped like a canoe or fish. A farmer may be honored with a cocoa pod or ear of corn. A driver may have a car-shaped casket. A trader in beverages might be buried in a bottle-shaped casket. A devout Christian might be laid to rest in a Bible-shaped casket. These designs are both artistic and deeply personal.',
   },
   {
     type: 'figure',
@@ -120,44 +153,42 @@ export const meaningOfMourningBlocks = [
       'Handcrafted Figurative Fantasy Coffins unique only to Ghanaians in the greater Accra region. These are carved in accordance to one’s interest and career.',
   },
   {
-    type: 'figureGrid',
-    figures: [
-      {
-        src: `${base}/images/f2.jpeg`,
-        alt: 'A Pilot and A Singer or Announcer',
-        caption: 'A Pilot & A Singer or Announcer.',
-      },
-      {
-        src: `${base}/images/f3.jpeg`,
-        alt: 'A Fisherman, Fishmonger and A Driver',
-        caption: 'A Fisherman, Fishmonger & A Driver.',
-      },
-      {
-        src: `${base}/images/f4.jpeg`,
-        alt: 'Pastor and A Drummer',
-        caption: 'Pastor & A Drummer.',
-      },
-    ],
+    type: 'p',
+    text:
+      'To many non-Ghanaians, this practice is astonishing and fascinating. Yet it is rooted in an understandable idea: the final vessel of the dead should tell the story of who they were. Rather than erasing individuality, the coffin reflects it.',
   },
   {
-    type: 'figureGrid',
-    figures: [
-      {
-        src: `${base}/images/f6.jpeg`,
-        alt: 'Figurative fantasy coffin',
-        caption: 'Figurative fantasy coffin — Greater Accra.',
-      },
-      {
-        src: `${base}/images/f7.jpeg`,
-        alt: 'Figurative fantasy coffin',
-        caption: 'Figurative fantasy coffin — Greater Accra.',
-      },
-      {
-        src: `${base}/images/f8.jpeg`,
-        alt: 'Figurative fantasy coffin',
-        caption: 'Figurative fantasy coffin — Greater Accra.',
-      },
-    ],
+    type: 'figure',
+    src: `${base}/images/f2.jpeg`,
+    alt: 'A Pilot and A Singer or Announcer',
+    caption: 'A Pilot & A Singer or Announcer.',
+  },
+  {
+    type: 'p',
+    text:
+      'The same workshop imagination can honor a life spent in the sky or behind a microphone—forms that announce, at a glance, how the community remembers the work and voice of the departed.',
+  },
+  {
+    type: 'figure',
+    src: `${base}/images/f3.jpeg`,
+    alt: 'A Fisherman, Fishmonger and A Driver',
+    caption: 'A Fisherman, Fishmonger & A Driver.',
+  },
+  {
+    type: 'p',
+    text:
+      'Lives drawn from the sea, the market, or the road may each receive a vessel that speaks plainly to neighbors and strangers alike about what sustained the person who has gone.',
+  },
+  {
+    type: 'figure',
+    src: `${base}/images/f4.jpeg`,
+    alt: 'Pastor and A Drummer',
+    caption: 'Pastor & A Drummer.',
+  },
+  {
+    type: 'p',
+    text:
+      'Spiritual calling and the pulse of the drum are not forgotten either: the coffin can carry Scripture, rhythm, and public faith as visibly as cloth carries grief.',
   },
   {
     type: 'p',

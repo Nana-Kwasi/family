@@ -71,6 +71,58 @@ function Figure({ src, alt, caption, fill }) {
   );
 }
 
+export function HeritageLongformBlocks({ blocks }) {
+  return blocks.map((b, i) => {
+    if (b.type === 'p') {
+      return <p key={i} style={pStyle}>{b.text}</p>;
+    }
+    if (b.type === 'h2') {
+      return <h3 key={i} style={h2Style}>{b.text}</h3>;
+    }
+    if (b.type === 'list') {
+      return (
+        <ul key={i} style={{ margin: '0 0 20px', paddingLeft: 22 }}>
+          {b.items.map((item, j) => (
+            <li
+              key={j}
+              style={{
+                fontFamily: "'EB Garamond', serif",
+                fontSize: 'clamp(16px,2vw,19px)',
+                color: '#EDD9BC',
+                lineHeight: 1.85,
+                marginBottom: 10,
+              }}
+            >
+              {item}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    if (b.type === 'figure') {
+      return <Figure key={i} src={b.src} alt={b.alt} caption={b.caption} />;
+    }
+    if (b.type === 'figureGrid') {
+      return (
+        <div
+          key={i}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            margin: '28px 0 32px',
+          }}
+        >
+          {b.figures.map((fig, j) => (
+            <Figure key={j} src={fig.src} alt={fig.alt} caption={fig.caption} fill />
+          ))}
+        </div>
+      );
+    }
+    return null;
+  });
+}
+
 export default function HeritageLongformEssay({
   id,
   meta,
@@ -125,55 +177,7 @@ export default function HeritageLongformEssay({
         </p>
       </div>
 
-      {blocks.map((b, i) => {
-        if (b.type === 'p') {
-          return <p key={i} style={pStyle}>{b.text}</p>;
-        }
-        if (b.type === 'h2') {
-          return <h3 key={i} style={h2Style}>{b.text}</h3>;
-        }
-        if (b.type === 'list') {
-          return (
-            <ul key={i} style={{ margin: '0 0 20px', paddingLeft: 22 }}>
-              {b.items.map((item, j) => (
-                <li
-                  key={j}
-                  style={{
-                    fontFamily: "'EB Garamond', serif",
-                    fontSize: 'clamp(16px,2vw,19px)',
-                    color: '#EDD9BC',
-                    lineHeight: 1.85,
-                    marginBottom: 10,
-                  }}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          );
-        }
-        if (b.type === 'figure') {
-          return <Figure key={i} src={b.src} alt={b.alt} caption={b.caption} />;
-        }
-        if (b.type === 'figureGrid') {
-          return (
-            <div
-              key={i}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 16,
-                margin: '28px 0 32px',
-              }}
-            >
-              {b.figures.map((fig, j) => (
-                <Figure key={j} src={fig.src} alt={fig.alt} caption={fig.caption} fill />
-              ))}
-            </div>
-          );
-        }
-        return null;
-      })}
+      <HeritageLongformBlocks blocks={blocks} />
     </section>
   );
 }

@@ -9,8 +9,14 @@ import { notifyAfiaBookFeedback } from '../utils/emailjs';
 import { drumsCallHomeStories } from '../data/drumsCallHomeStories';
 import { products } from '../data/products';
 import { trackEvent } from '../utils/analytics';
-import MeaningOfMourningEssay from '../components/MeaningOfMourningEssay';
-import TraditionalMarriageEssay from '../components/TraditionalMarriageEssay';
+import { HeritageLongformBlocks } from '../components/HeritageLongformEssay';
+import { meaningOfMourningMeta, meaningOfMourningBlocks } from '../data/meaningOfMourningStory';
+import { traditionalMarriageMeta, traditionalMarriageBlocks } from '../data/traditionalMarriageStory';
+
+const HERITAGE_ESSAY_SHELF = [
+  { key: 'mourning', shelfMeta: 'Heritage Essay', meta: meaningOfMourningMeta, blocks: meaningOfMourningBlocks },
+  { key: 'marriage', shelfMeta: 'Cultural Storybook', meta: traditionalMarriageMeta, blocks: traditionalMarriageBlocks },
+];
 
 // ── Book Block Renderer ───────────────────────────────────────────────────────
 
@@ -487,7 +493,7 @@ function StorybookShelfCard({ title, subtitle, meta, onOpen }) {
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.16em', color: '#9E7D42', textTransform: 'uppercase', marginBottom: 10 }}>
         {meta}
       </div>
-      <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: '#C9A558', lineHeight: 1.35, marginBottom: 8 }}>
+      <h3 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, color: '#C9A558', lineHeight: 1.35, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         {title}
       </h3>
       <p style={{ color: '#BA9D7C', fontStyle: 'italic', lineHeight: 1.7, marginBottom: 18 }}>
@@ -509,6 +515,9 @@ function getStorySuggestedProducts(story) {
     return products.filter(p => p.type === 'hoodie').slice(0, 2);
   }
   if (hay.includes('festival') || hay.includes('heritage') || hay.includes('culture')) {
+    return products.filter(p => p.type === 'tshirt').slice(0, 2);
+  }
+  if (hay.includes('wedding') || hay.includes('marriage') || hay.includes('mourning') || hay.includes('funeral')) {
     return products.filter(p => p.type === 'tshirt').slice(0, 2);
   }
   return products.slice(0, 2);
@@ -629,6 +638,49 @@ function InspiredGiftsSection({ products, storyId, onPickProduct }) {
         </div>
       </div>
     </>
+  );
+}
+
+function HeritageEssayReadModal({ entry, onClose }) {
+  const { shelfMeta, meta, blocks } = entry;
+  const suggestedProducts = getStorySuggestedProducts({
+    title: meta.title,
+    subtitle: meta.subtitle,
+    content: '',
+    intro: '',
+  });
+  const feedbackStory = { id: meta.id, title: meta.title, type: 'story' };
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    trackEvent('open_heritage_essay_modal', { essay_id: meta.id, essay_title: meta.title });
+  }, [meta.id, meta.title]);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: 0, overflowY: 'auto' }} onClick={onClose} role="presentation">
+      <div style={{ background: '#0d0a02', width: '100%', maxWidth: 1000, margin: 'auto', display: 'flex', flexDirection: 'column', maxHeight: '100vh', position: 'relative' }} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="heritage-essay-modal-title">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(201,165,88,0.15)', flexShrink: 0, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.18em', color: '#9E7D42', textTransform: 'uppercase', marginBottom: 6 }}>{shelfMeta}</div>
+            <div id="heritage-essay-modal-title" style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(12px,2vw,15px)', color: '#C9A558', letterSpacing: '0.08em', lineHeight: 1.35 }}>{meta.title}</div>
+            <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: '#7C5F48', fontStyle: 'italic', marginTop: 4 }}>{meta.subtitle}</div>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: 'rgba(201,165,88,0.1)', border: '1px solid rgba(201,165,88,0.25)', color: '#C9A558', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', flexShrink: 0 }}>✕ Close</button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: 'clamp(20px,4vw,48px)' }}>
+          <div style={{ maxWidth: 760, margin: '0 auto' }}>
+            <HeritageLongformBlocks blocks={blocks} />
+            <StoryFeedbackSection story={feedbackStory} />
+            <InspiredGiftsSection products={suggestedProducts} storyId={meta.id} onPickProduct={onClose} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1096,6 +1148,7 @@ export default function StoriesPage() {
   const [bookOpen, setBookOpen] = useState(false);
   const [chapterOpenStory, setChapterOpenStory] = useState(null);
   const [readOpenStory, setReadOpenStory] = useState(null);
+  const [heritageEssayKey, setHeritageEssayKey] = useState(null);
   const [adminStories, setAdminStories] = useState([]);
   const [featuredDrums, setFeaturedDrums] = useState(drumsCallHomeStories);
 
@@ -1117,13 +1170,18 @@ export default function StoriesPage() {
 
   // Prevent body scroll when book modal open
   useEffect(() => {
-    document.body.style.overflow = (bookOpen || chapterOpenStory || readOpenStory) ? 'hidden' : '';
+    document.body.style.overflow = (bookOpen || chapterOpenStory || readOpenStory || heritageEssayKey) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [bookOpen, chapterOpenStory, readOpenStory]);
+  }, [bookOpen, chapterOpenStory, readOpenStory, heritageEssayKey]);
 
   const shelfChapterStories = useMemo(
     () => [...featuredDrums, ...adminStories.filter((s) => s.chapters && s.chapters.length > 0)],
     [featuredDrums, adminStories],
+  );
+
+  const heritageEntry = useMemo(
+    () => (heritageEssayKey ? HERITAGE_ESSAY_SHELF.find((e) => e.key === heritageEssayKey) : null),
+    [heritageEssayKey],
   );
 
   return (
@@ -1134,14 +1192,6 @@ export default function StoriesPage() {
       </section>
 
       <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(201,165,88,0.3),transparent)', maxWidth: 400, margin: '0 auto 56px' }} />
-
-      <MeaningOfMourningEssay />
-
-      <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(201,165,88,0.2),transparent)', maxWidth: 520, margin: '0 auto 48px' }} />
-
-      <TraditionalMarriageEssay />
-
-      <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(201,165,88,0.2),transparent)', maxWidth: 520, margin: '0 auto 48px' }} />
 
       {/* Chapter-based storybooks (3 per row) */}
       <section style={{ padding: '0 20px 64px' }}>
@@ -1156,6 +1206,15 @@ export default function StoriesPage() {
               meta="Cultural Guide"
               onOpen={() => setBookOpen(true)}
             />
+            {HERITAGE_ESSAY_SHELF.map((entry) => (
+              <StorybookShelfCard
+                key={entry.key}
+                title={entry.meta.title}
+                subtitle={entry.meta.subtitle}
+                meta={entry.shelfMeta}
+                onOpen={() => setHeritageEssayKey(entry.key)}
+              />
+            ))}
             {shelfChapterStories.map((s) => (
                 <StorybookShelfCard
                   key={s.id}
@@ -1205,6 +1264,12 @@ export default function StoriesPage() {
       {bookOpen && <BookModal onClose={() => setBookOpen(false)} />}
       {chapterOpenStory && <ChapterStoryModal story={chapterOpenStory} onClose={() => setChapterOpenStory(null)} />}
       {readOpenStory && <StoryReadModal story={readOpenStory} onClose={() => setReadOpenStory(null)} />}
+      {heritageEntry && (
+        <HeritageEssayReadModal
+          entry={heritageEntry}
+          onClose={() => setHeritageEssayKey(null)}
+        />
+      )}
     </div>
   );
 }

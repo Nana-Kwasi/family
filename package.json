@@ -1,6 +1,6 @@
 {
   "name": "ghana-birthday-pro-clean",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "private": true,
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
