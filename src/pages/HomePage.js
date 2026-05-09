@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { products } from '../data/products';
 import VideoShowcase from '../components/VideoShowcase';
+import { trackEvent } from '../utils/analytics';
 
 const GoldDivider = () => (
   <div className="gold-divider">
@@ -74,17 +75,18 @@ function ProductCarousel({ asColumn = false }) {
       {/* Gradient overlay — bottom-heavy */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to top, rgba(18,10,4,0.95) 0%, rgba(18,10,4,0.45) 45%, rgba(18,10,4,0.1) 100%)',
+        background: 'linear-gradient(to top, rgba(8,4,2,0.98) 0%, rgba(12,7,4,0.8) 42%, rgba(12,7,4,0.32) 72%, rgba(12,7,4,0.12) 100%)',
         pointerEvents: 'none',
       }} />
 
       {/* Top-right badge */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
         <span style={{
-          fontFamily: "'Montserrat', sans-serif", fontSize: 9,
-          letterSpacing: '0.16em', color: '#C9A558', textTransform: 'uppercase',
-          background: 'rgba(201,165,88,0.15)', border: '1px solid rgba(201,165,88,0.35)',
-          borderRadius: 50, padding: '4px 12px',
+          fontFamily: "'Montserrat', sans-serif", fontSize: 11, fontWeight: 700,
+          letterSpacing: '0.14em', color: '#1C0E04', textTransform: 'uppercase',
+          background: 'rgba(255,215,140,0.96)', border: '1px solid rgba(255,225,165,1)',
+          borderRadius: 50, padding: '6px 14px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
         }}>Gift Ready</span>
       </div>
 
@@ -92,24 +94,26 @@ function ProductCarousel({ asColumn = false }) {
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: 'clamp(20px,3vw,32px)',
+        background: 'linear-gradient(to top, rgba(8,4,2,0.74) 0%, rgba(8,4,2,0.36) 60%, rgba(8,4,2,0) 100%)',
         ...slideStyle[slideDir],
       }} onClick={e => e.stopPropagation()}>
-        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 9, letterSpacing: '0.22em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 6 }}>
+        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.22em', color: '#E3BE72', textTransform: 'uppercase', marginBottom: 6, textShadow: '0 2px 10px rgba(0,0,0,0.75)' }}>
           {product.label} &nbsp;·&nbsp; {product.tagline}
         </p>
         <h2
           onClick={() => navigate(`/product/${product.id}`)}
           style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: 'clamp(20px, 2.5vw, 30px)',
+            fontSize: 'clamp(22px, 3.1vw, 34px)',
             color: '#FAF0E0', fontWeight: 700,
-            lineHeight: 1.2, marginBottom: 8, cursor: 'pointer',
+            lineHeight: 1.2, marginBottom: 8, cursor: 'pointer', textShadow: '0 2px 12px rgba(0,0,0,0.78)',
           }}
         >{product.name}</h2>
         <p style={{
           fontFamily: "'Times New Roman', Times, serif",
-          fontSize: 13, color: '#D4B896', fontStyle: 'italic',
+          fontSize: 16, color: '#F6E3CC', fontStyle: 'italic',
           lineHeight: 1.65, marginBottom: 16, maxWidth: 400,
+          textShadow: '0 2px 10px rgba(0,0,0,0.82)',
         }}>{product.description.slice(0, 100)}…</p>
 
         {/* Price + CTA */}
@@ -123,8 +127,8 @@ function ProductCarousel({ asColumn = false }) {
         </div>
 
         {/* Dots + counter */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap', overflowX: 'auto', maxWidth: 'min(100%, 220px)', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}>
             {products.map((_, i) => (
               <button key={i} onClick={e => { e.stopPropagation(); goTo(i, i > current ? 'left' : 'right'); }} style={{
                 width: i === current ? 22 : 7, height: 7,
@@ -174,7 +178,12 @@ export default function HomePage() {
   const [error, setError] = useState('');
 
   function handleReveal() {
-    if (!dob) { setError('Please select your birthday first.'); return; }
+    if (!dob) {
+      setError('Please select your birthday first.');
+      trackEvent('name_reveal_validation_error', { reason: 'missing_dob' });
+      return;
+    }
+    trackEvent('start_name_reveal', { gender });
     navigate(`/result?dob=${dob}&gender=${gender}`);
   }
 
@@ -182,7 +191,7 @@ export default function HomePage() {
     <div className="page-wrapper">
 
       <style>{`
-        .home-carousels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 20px; background: var(--bg-main); align-items: stretch; }
+        .home-carousels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 20px; background: #F3F1EC; align-items: stretch; }
         .home-carousel-cell { min-height: 580px; height: 580px; }
         .home-row2 { display: grid; grid-template-columns: 1fr 1fr repeat(4, 1fr); gap: 18px; }
         @media (max-width: 1100px) { .home-row2 { grid-template-columns: 1fr 1fr 1fr 1fr; } }
@@ -209,36 +218,36 @@ export default function HomePage() {
           {/* Card 1 — Celebrate Her */}
           <div style={{ background: '#2E1E12', border: '1px solid rgba(201,165,88,0.28)', borderRadius: 12, padding: '24px 20px', boxShadow: '0 4px 24px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 9, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
                 Because Her Love Deserves Honoring
               </p>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(16px, 2vw, 22px)', color: '#EDD9BC', fontWeight: 700, marginBottom: 10, lineHeight: 1.25 }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(18px, 2.2vw, 24px)', color: '#EDD9BC', fontWeight: 700, marginBottom: 10, lineHeight: 1.25 }}>
                 Celebrate Her Beautifully
               </h2>
-              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 13, color: '#D4B896', fontStyle: 'italic', lineHeight: 1.8, marginBottom: 18 }}>
+              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 15, color: '#D4B896', fontStyle: 'italic', lineHeight: 1.8, marginBottom: 18 }}>
                 Elegant gifts with heartfelt meaning — created to honor the women who give everything.
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn-gold" style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, padding: '9px 14px' }} onClick={() => navigate('/store')}>Find Her Gift</button>
-              <button className="btn-ghost" style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, padding: '8px 14px' }} onClick={() => navigate('/store')}>Browse Collection</button>
+              <button className="btn-gold" style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, padding: '10px 14px' }} onClick={() => navigate('/store')}>Find Her Gift</button>
+              <button className="btn-ghost" style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, padding: '9px 14px' }} onClick={() => navigate('/store')}>Browse Collection</button>
             </div>
           </div>
 
           {/* Card 2 — Our Story */}
           <div style={{ background: '#2E1E12', border: '1px solid rgba(201,165,88,0.28)', borderRadius: 12, padding: '24px 20px', boxShadow: '0 4px 24px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 9, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>Our Story</p>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(14px, 1.8vw, 20px)', color: '#EDD9BC', marginBottom: 10, lineHeight: 1.3 }}>
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>Our Story</p>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(16px, 2vw, 22px)', color: '#EDD9BC', marginBottom: 10, lineHeight: 1.3 }}>
                 We believe mothers deserve more than ordinary gifts.
               </h3>
-              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 13, color: '#D4B896', lineHeight: 1.8, fontStyle: 'italic' }}>
+              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 15, color: '#D4B896', lineHeight: 1.8, fontStyle: 'italic' }}>
                 Heartfelt mugs, shirts, and keepsakes crafted to honour the women whose love shapes our lives every day.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
               {['Respect', 'Heritage', 'Love', 'Legacy'].map(w => (
-                <span key={w} style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 9, letterSpacing: '0.12em', color: 'rgba(201,165,88,0.6)', textTransform: 'uppercase' }}>{w}</span>
+                <span key={w} style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.12em', color: 'rgba(201,165,88,0.7)', textTransform: 'uppercase' }}>{w}</span>
               ))}
             </div>
           </div>
@@ -252,8 +261,8 @@ export default function HomePage() {
           ].map(({ icon, title, desc }) => (
             <div key={title} style={{ background: '#261A11', border: '1px solid rgba(201,165,88,0.2)', borderRadius: 12, padding: '22px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <div style={{ fontSize: 28 }}>{icon}</div>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, color: '#C9A558', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{title}</div>
-              <p style={{ color: '#BA9D7C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>{desc}</p>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#C9A558', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{title}</div>
+              <p style={{ color: '#BA9D7C', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{desc}</p>
             </div>
           ))}
 
@@ -304,6 +313,9 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <h2 className="gen-title" style={{ marginBottom: 12 }}>Ghanaian (Akan)<br />Name Generator</h2>
               <p className="gen-desc">In Akan tradition, every child is given a day name based on the day of the week they were born.</p>
+              <p style={{ marginTop: 10, color: '#C9A558', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                Discover your name. Gift your heritage.
+              </p>
             </div>
             <div className="afia-card" style={{ textAlign: 'left' }}>
               <div className="form-field">
@@ -335,6 +347,19 @@ export default function HomePage() {
               </div>
               {error && <div className="error-msg" style={{ marginBottom: 16 }}>{error}</div>}
               <button className="btn-gold" onClick={handleReveal}>Reveal Your Day Name</button>
+              <button
+                className="btn-ghost"
+                style={{ marginTop: 10, width: '100%', fontFamily: "'Montserrat', sans-serif", fontSize: 12, letterSpacing: '0.1em' }}
+                onClick={() => {
+                  trackEvent('home_shop_meaningful_gifts_click', { source: 'generator_block' });
+                  navigate('/store');
+                }}
+              >
+                Shop Meaningful Gifts
+              </button>
+              <p style={{ marginTop: 10, color: '#BA9D7C', fontSize: 13, lineHeight: 1.6, textAlign: 'center' }}>
+                After your name reveal, explore curated gifts inspired by your heritage.
+              </p>
             </div>
           </div>
 
@@ -346,9 +371,9 @@ export default function HomePage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
+                { to: '/store',   icon: '🛍️', label: 'The Store',      desc: 'Find meaningful gifts designed for mothers, heritage, and legacy moments' },
                 { to: '/stories', icon: '📚', label: 'Stories & Book', desc: 'Read Ghanaian folktales, proverbs, and the full book "Outdooring (Aba-Dinto)"' },
-                { to: '/about',   icon: '👑', label: 'About Afia',     desc: 'Meet the Friday-born queen — her music, her mission, and her cultural legacy' },
-                { to: '/store',   icon: '🛍️', label: 'The Store',      desc: 'Wear your heritage with kente-inspired hoodies and tees crafted for the culture' },
+                { to: '/about',   icon: '👑', label: 'About Mama Africa', desc: 'Her voice, her mission, and the cultural legacy behind this platform' },
               ].map(({ to, icon, label, desc }) => (
                 <Link key={to} to={to} style={{ textDecoration: 'none' }}>
                   <div className="afia-card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 22px', transition: 'border-color 0.2s' }}

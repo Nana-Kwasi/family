@@ -1,0 +1,45 @@
+{
+  "title": "Shipping & Returns",
+  "intro": "Simple clarity before checkout.",
+  "sections": [
+    {
+      "heading": "Order Processing",
+      "paragraphs": [
+        "Orders are processed by our trusted fulfillment checkout partner. Typical production time is 2-7 business days before shipment."
+      ]
+    },
+    {
+      "heading": "Shipping",
+      "paragraphs": [
+        "Delivery timelines vary by destination. Tracking details are sent after dispatch so you can monitor your order in transit."
+      ],
+      "regions": [
+        {
+          "label": "United States",
+          "text": "Production: 2-7 business days · Delivery: 3-8 business days."
+        },
+        {
+          "label": "Europe",
+          "text": "Production: 2-7 business days · Delivery: 5-12 business days."
+        },
+        {
+          "label": "International",
+          "text": "Production: 2-7 business days · Delivery: 7-18 business days."
+        }
+      ]
+    },
+    {
+      "heading": "Returns & Replacements",
+      "paragraphs": [
+        "If your item arrives damaged or incorrect, contact support within 7 days of delivery with clear photos and order details for a replacement review.",
+        "Standard return SLA: resolution response within 2 business days and replacement decision within 5 business days."
+      ]
+    },
+    {
+      "heading": "Contact",
+      "paragraphs": [
+        "For shipping and order issues, contact us at Mamaafricaafia@gmail.com."
+      ]
+    }
+  ]
+}

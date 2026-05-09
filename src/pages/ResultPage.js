@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import dayBorns from '../data/akanDayBorns.json';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import { generateCertificateDataUrl, CERT_VARIANTS } from '../utils/certificateCanvas';
+
+const CERT_STYLE_SAMPLES = [
+  { variant: CERT_VARIANTS.NAMING_ADINKRA, src: '/images/cer-sample-2.png', title: 'Naming · Adinkra', subtitle: 'Parchment & lineage detail' },
+  { variant: CERT_VARIANTS.NAMING_KENTE, src: '/images/cert-sample-3.png', title: 'Naming · Kente', subtitle: 'Bold kente frame' },
+];
 
 function getDay(dateStr) {
   const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -22,193 +28,126 @@ const GoldDivider = () => (
   </div>
 );
 
-async function downloadCertificate(name, day, dateDisplay, gender, data) {
-  await document.fonts.ready;
 
-  const W = 1600, H = 960;
-  const SCALE = 4; // 4x = ultra-sharp on any screen or printer
-  const canvas = document.createElement('canvas');
-  canvas.width = W * SCALE;
-  canvas.height = H * SCALE;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(SCALE, SCALE);
+function certificateFilename(name) {
+  const base = String(name || 'certificate')
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 80) || 'certificate';
+  return `${base}-akan-heritage.png`;
+}
 
-  // ── Background ──────────────────────────────────────────────
-  const bg = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H / 2, W * 0.8);
-  bg.addColorStop(0, '#161008');
-  bg.addColorStop(0.6, '#0e0b05');
-  bg.addColorStop(1, '#18100A');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+function isIOSLike() {
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
 
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
+async function triggerCertificateDownload(name, dataUrl) {
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return;
 
-  // ── Diamond helper ────────────────────────────────────────────
-  const diamond = (x, y, size) => {
-    ctx.beginPath();
-    ctx.moveTo(x, y - size); ctx.lineTo(x + size, y);
-    ctx.lineTo(x, y + size); ctx.lineTo(x - size, y);
-    ctx.closePath(); ctx.fill();
-  };
-
-  // ── Rule with center diamond ──────────────────────────────────
-  const rule = (y, inset = 200) => {
-    ctx.strokeStyle = 'rgba(201,165,88,0.4)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(inset, y); ctx.lineTo(W - inset, y); ctx.stroke();
-    ctx.fillStyle = '#C9A558';
-    diamond(W / 2, y, 6);
-  };
-
-  // ── Borders ──────────────────────────────────────────────────
-  ctx.strokeStyle = '#C9A558'; ctx.lineWidth = 4;
-  ctx.strokeRect(26, 26, W - 52, H - 52);
-  ctx.strokeStyle = 'rgba(201,165,88,0.5)'; ctx.lineWidth = 1;
-  ctx.strokeRect(40, 40, W - 80, H - 80);
-  ctx.strokeStyle = 'rgba(201,165,88,0.2)'; ctx.lineWidth = 1;
-  ctx.strokeRect(54, 54, W - 108, H - 108);
-
-  // ── Corner ornaments ─────────────────────────────────────────
-  const corner = (cx, cy, sx, sy) => {
-    const L = 64;
-    ctx.strokeStyle = '#C9A558'; ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx + sx * L, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + sy * L);
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(201,165,88,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx + sx * L * 0.5, cy + sy * 14);
-    ctx.lineTo(cx + sx * 14, cy + sy * 14);
-    ctx.lineTo(cx + sx * 14, cy + sy * L * 0.5);
-    ctx.stroke();
-    ctx.fillStyle = '#C9A558';
-    diamond(cx, cy, 5);
-  };
-  corner(64, 64, 1, 1); corner(W - 64, 64, -1, 1);
-  corner(64, H - 64, 1, -1); corner(W - 64, H - 64, -1, -1);
-
-  // ── HEADER ───────────────────────────────────────────────────
-  ctx.fillStyle = '#C9A558';
-  ctx.font = '600 15px Cinzel, serif';
-  ctx.fillText('AFIA  ·  MAMA AFRICA', W / 2, 94);
-
-  rule(112, 230);
-
-  ctx.fillStyle = '#E8CB82';
-  ctx.font = '700 26px Cinzel, serif';
-  ctx.fillText('CERTIFICATE OF AKAN HERITAGE', W / 2, 152);
-
-  rule(170, 300);
-
-  // ── Certifying line ───────────────────────────────────────────
-  ctx.fillStyle = '#c8b08a';
-  ctx.font = 'italic 21px "Times New Roman", Times, serif';
-  ctx.fillText('This certifies that the bearer, known as', W / 2, 218);
-
-  // ── Name ──────────────────────────────────────────────────────
-  ctx.save();
-  ctx.shadowColor = 'rgba(201,165,88,0.5)';
-  ctx.shadowBlur = 30;
-  ctx.fillStyle = '#C9A558';
-  ctx.font = '700 96px Cinzel, serif';
-  ctx.fillText(name, W / 2, 345);
-  ctx.restore();
-
-  // Underline with gem
-  ctx.font = '700 96px Cinzel, serif';
-  const nw = ctx.measureText(name).width * 0.65;
-  ctx.strokeStyle = 'rgba(201,165,88,0.6)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(W/2 - nw/2, 360); ctx.lineTo(W/2 + nw/2, 360); ctx.stroke();
-  ctx.fillStyle = '#C9A558'; diamond(W / 2, 360, 5);
-
-  // ── Lineage ───────────────────────────────────────────────────
-  ctx.fillStyle = '#EDD9BC';
-  ctx.font = '24px "Times New Roman", Times, serif';
-  ctx.fillText(`is of the ${day}-Born lineage of the Akan people of Ghana`, W / 2, 406);
-
-  // ── Metadata ──────────────────────────────────────────────────
-  ctx.fillStyle = '#b89a6a';
-  ctx.font = 'italic 19px "Times New Roman", Times, serif';
-  ctx.fillText(
-    `${gender === 'female' ? '♀ Female' : '♂ Male'}  ·  Born on ${day}  ·  ${data.planet}  ·  Sacred Colour: ${data.color}`,
-    W / 2, 442
-  );
-
-  // ── Divider ───────────────────────────────────────────────────
-  rule(468, 200);
-
-  // ── Soul Path ─────────────────────────────────────────────────
-  ctx.fillStyle = '#d4ae52';
-  ctx.font = 'italic 21px "Times New Roman", Times, serif';
-  const soul = `\u201C${data.soulPath}\u201D`;
-  const maxLineW = 1100;
-  const words = soul.split(' ');
-  let line = ''; let sy = 514;
-  for (const w of words) {
-    const test = line + w + ' ';
-    if (ctx.measureText(test).width > maxLineW && line) {
-      ctx.fillText(line.trim(), W / 2, sy);
-      line = w + ' '; sy += 36;
-    } else { line = test; }
+  const filename = certificateFilename(name);
+  let blob;
+  try {
+    blob = await fetch(dataUrl).then((r) => r.blob());
+  } catch {
+    return;
   }
-  if (line.trim()) ctx.fillText(line.trim(), W / 2, sy);
-  sy += 36;
+  if (!blob || blob.size < 100) return;
 
-  // ── Divider after quote ───────────────────────────────────────
-  rule(sy + 16, 240);
+  const objectUrl = URL.createObjectURL(blob);
 
-  // ── Attributes + Birth Date block ────────────────────────────
-  const blockY = sy + 56;
-
-  if (data.attributes && data.attributes.length) {
-    ctx.fillStyle = '#C9A558';
-    ctx.font = '14px Cinzel, serif';
-    ctx.fillText(data.attributes.slice(0, 5).join('   ·   '), W / 2, blockY);
+  if (isIOSLike() && typeof navigator.share === 'function' && typeof navigator.canShare === 'function') {
+    try {
+      const file = new File([blob], filename, { type: blob.type || 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Your Akan heritage certificate',
+        });
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+    } catch {
+      // Share failed or dismissed — fall through to anchor download
+    }
   }
 
-  ctx.fillStyle = '#9a8060';
-  ctx.font = '16px "Times New Roman", Times, serif';
-  ctx.fillText(`Date of Birth: ${dateDisplay}`, W / 2, blockY + 36);
-
-  // ── Bottom rule ───────────────────────────────────────────────
-  rule(H - 122, 300);
-
-  // ── Footer ────────────────────────────────────────────────────
-  ctx.fillStyle = '#BA9D7C';
-  ctx.font = '15px Cinzel, serif';
-  ctx.fillText(
-    `Issued by AFIA  ·  Mama Africa  ·  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-    W / 2, H - 84
-  );
-  ctx.fillStyle = 'rgba(201,165,88,0.55)';
-  ctx.font = '13px Cinzel, serif';
-  ctx.fillText('Celebrating Akan Heritage & the African Diaspora', W / 2, H - 60);
-
-  // Bottom ornament dots
-  ctx.fillStyle = 'rgba(201,165,88,0.5)';
-  [-20, 0, 20].forEach((off, i) => {
-    const r = i === 1 ? 4 : 2.5;
-    ctx.beginPath(); ctx.arc(W / 2 + off, H - 36, r, 0, Math.PI * 2); ctx.fill();
-  });
-
-  // ── Download ──────────────────────────────────────────────────
   const link = document.createElement('a');
-  link.download = `${name}-akan-heritage-certificate.png`;
-  link.href = canvas.toDataURL('image/png', 1.0);
+  link.href = objectUrl;
+  link.download = filename;
+  link.rel = 'noopener';
+  link.style.position = 'fixed';
+  link.style.left = '-9999px';
+  document.body.appendChild(link);
   link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 120000);
+}
+
+function getShareUrl() {
+  const current = window.location.href;
+  const configured = process.env.REACT_APP_PUBLIC_SITE_URL || '';
+  const isLocal = /localhost|127\.0\.0\.1/.test(window.location.host);
+  return {
+    url: isLocal && configured ? configured : current,
+    isLocalWithoutPublic: isLocal && !configured,
+  };
 }
 
 export default function ResultPage() {
-  const [copied, setCopied] = useState(false);
+  const [shareNotice, setShareNotice] = useState('');
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [certPreviewOpen, setCertPreviewOpen] = useState(false);
+  const [certLoading, setCertLoading] = useState(false);
+  const [certDataUrl, setCertDataUrl] = useState('');
+  const [certError, setCertError] = useState('');
+  const [certStepIndex, setCertStepIndex] = useState(-1);
+  const [certVariant, setCertVariant] = useState(CERT_VARIANTS.NAMING_ADINKRA);
+  const [showCertOptions, setShowCertOptions] = useState(false);
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const shareMenuRef = useRef(null);
   const dob = params.get('dob');
   const gender = params.get('gender') || 'female';
+  const day = dob ? getDay(dob) : null;
+  const data = day && dayBorns[day] ? dayBorns[day] : null;
+
+  const dayBornMatchCount = useMemo(() => {
+    if (!day) return 0;
+    return products.filter((p) => p.bornDay === day).length;
+  }, [day]);
+
+  const dayBornPrimary = useMemo(() => {
+    if (!day) return [];
+    const match = products.filter((p) => p.bornDay === day);
+    if (match.length > 0) return match;
+    return products.filter((p) => p.bornDay === null);
+  }, [day]);
+
+  const otherProducts = useMemo(() => {
+    if (!day) return [];
+    return products.filter((p) => !dayBornPrimary.some((x) => x.id === p.id));
+  }, [day, dayBornPrimary]);
+
+  useEffect(() => {
+    if (!shareMenuOpen) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (!shareMenuRef.current?.contains(event.target)) setShareMenuOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [shareMenuOpen]);
 
   useEffect(() => {
     if (!dob) return;
     confetti({ particleCount: 120, spread: 80, colors: ['#C9A558', '#E8CB82', '#f5d966', '#ffffff'] });
   }, [dob]);
+
+  useEffect(() => {
+    setCertDataUrl('');
+    setCertError('');
+  }, [dob, gender, certVariant]);
 
   if (!dob) {
     return (
@@ -223,8 +162,6 @@ export default function ResultPage() {
     );
   }
 
-  const day = getDay(dob);
-  const data = dayBorns[day];
   if (!data) return null;
 
   const name = data[gender] || data.female;
@@ -247,6 +184,103 @@ export default function ResultPage() {
     passed: { emoji: '🎉', title: 'Belated Happy Birthday!', message: `Mama Africa sends warm belated birthday blessings to you, ${name}. Though the day has passed, the celebration of your life never ends.` },
     upcoming: { emoji: '🌟', title: 'Happy Birthday in Advance!', message: `Mama Africa celebrates you, ${name}, and looks forward to your special day. May the coming birthday bring you immense joy and renewed purpose.` },
   }[birthdayStatus];
+  const shareMeta = getShareUrl();
+  const certSteps = [
+    'Validating date of birth',
+    'Mapping your Akan lineage',
+    'Applying heritage signature',
+    'Rendering certificate artwork',
+    'Finalizing secure download',
+  ];
+
+  async function ensureCertificateData() {
+    if (certDataUrl) return certDataUrl;
+    setCertLoading(true);
+    setCertError('');
+    try {
+      const dataUrl = await generateCertificateDataUrl(name, day, dateDisplay, gender, data, certVariant);
+      if (!dataUrl || dataUrl.length < 10000) {
+        throw new Error('Generated certificate payload is too small');
+      }
+      setCertDataUrl(dataUrl);
+      return dataUrl;
+    } catch (error) {
+      setCertError('Certificate generation failed on this device. Please try again.');
+      return '';
+    } finally {
+      setCertLoading(false);
+    }
+  }
+
+  async function runCertificatePipeline() {
+    if (certLoading || certStepIndex !== -1) return;
+    if (certDataUrl) return;
+    try {
+      for (let i = 0; i < certSteps.length - 1; i += 1) {
+        setCertStepIndex(i);
+        // 5 stages x 2 seconds ~= 10 seconds
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+      setCertStepIndex(certSteps.length - 1);
+      await ensureCertificateData();
+    } finally {
+      setCertStepIndex(-1);
+    }
+  }
+
+  async function handleCertificateAction() {
+    if (!showCertOptions) {
+      setShowCertOptions(true);
+      return;
+    }
+    await runCertificatePipeline();
+  }
+
+  async function handlePreviewCertificate() {
+    const dataUrl = await ensureCertificateData();
+    if (dataUrl) setCertPreviewOpen(true);
+  }
+
+  async function handleShareChannel(channel) {
+    const text = `My Akan day name is ${name} — I was born on a ${day}. ${data.planet}. Discover yours with Mama Africa Official!`;
+    const { url, isLocalWithoutPublic } = getShareUrl();
+    if (isLocalWithoutPublic) {
+      setShareNotice('This link is local-only. Set REACT_APP_PUBLIC_SITE_URL to share a phone-accessible link.');
+    } else {
+      setShareNotice('');
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const encodedUrl = encodeURIComponent(url);
+    const encodedSubject = encodeURIComponent(`My Akan Name is ${name}!`);
+    const links = {
+      whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      x: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+      pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      email: `mailto:?subject=${encodedSubject}&body=${encodedText}%0A%0A${encodedUrl}`,
+    };
+
+    setShareMenuOpen(false);
+
+    if (channel === 'instagram' || channel === 'tiktok') {
+      const fullMessage = `${text}\n${url}`;
+      if (navigator.share) {
+        navigator.share({ title: `My Akan Name is ${name}!`, text, url }).catch(() => {});
+        return;
+      }
+      await navigator.clipboard.writeText(fullMessage);
+      window.open(channel === 'instagram' ? 'https://www.instagram.com/' : 'https://www.tiktok.com/', '_blank', 'noopener,noreferrer');
+      setShareNotice(`Copied your share text. Paste it in ${channel === 'instagram' ? 'Instagram' : 'TikTok'} to post.`);
+      return;
+    }
+
+    const target = links[channel];
+    if (target) window.open(target, '_blank', 'noopener,noreferrer');
+  }
 
   return (
     <div className="page-wrapper">
@@ -286,30 +320,210 @@ export default function ResultPage() {
           </p>
         </div>
 
-        {/* Certificate + Share */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 28 }}>
-          <button
-            onClick={() => downloadCertificate(name, day, dateDisplay, gender, data)}
-            style={{ background: 'linear-gradient(135deg,#C9A558,#E8CB82)', color: '#1C0E04', border: 'none', borderRadius: 8, padding: '12px 24px', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.12em', cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            📜 Download Certificate
-          </button>
-          <button
-            onClick={async () => {
-              const text = `My Akan day name is ${name} — I was born on a ${day}. ${data.planet}. Discover yours at AFIA!`;
-              const url = window.location.href;
-              if (navigator.share) {
-                navigator.share({ title: `My Akan Name is ${name}!`, text, url }).catch(() => {});
-              } else {
-                await navigator.clipboard.writeText(`${text}\n${url}`);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2500);
-              }
-            }}
-            style={{ background: 'transparent', color: '#C9A558', border: '1px solid rgba(201,165,88,0.4)', borderRadius: 8, padding: '12px 24px', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.12em', cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            {copied ? '✓ Copied!' : '🔗 Share My Name'}
-          </button>
+        <div style={{ marginTop: 28, maxWidth: 980, marginLeft: 'auto', marginRight: 'auto', border: '1px solid rgba(201,165,88,0.2)', borderRadius: 12, padding: '16px 14px', background: 'rgba(201,165,88,0.03)' }}>
+          {showCertOptions && (
+            <>
+              <p style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 11,
+                letterSpacing: '0.14em',
+                color: '#C9A558',
+                textTransform: 'uppercase',
+                marginBottom: 12,
+                textAlign: 'center',
+              }}
+              >
+                Choose certificate artwork
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
+                gap: 12,
+                marginBottom: 18,
+              }}
+              >
+                {CERT_STYLE_SAMPLES.map((s) => (
+                  <button
+                    key={s.variant}
+                    type="button"
+                    onClick={() => setCertVariant(s.variant)}
+                    style={{
+                      border: certVariant === s.variant ? '2px solid #C9A558' : '1px solid rgba(201,165,88,0.28)',
+                      borderRadius: 10,
+                      padding: 8,
+                      background: certVariant === s.variant ? 'rgba(201,165,88,0.14)' : 'rgba(201,165,88,0.04)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      color: 'inherit',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    <img
+                      src={s.src}
+                      alt=""
+                      loading="lazy"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        borderRadius: 6,
+                        display: 'block',
+                        aspectRatio: '16 / 10',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#C9A558', marginTop: 8, letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.3 }}>
+                      {s.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#BA9D7C', marginTop: 4, lineHeight: 1.35 }}>
+                      {s.subtitle}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {certDataUrl && certStepIndex === -1 && !certLoading && (
+              <button
+                onClick={handlePreviewCertificate}
+                style={{ background: 'linear-gradient(135deg,#C9A558,#E8CB82)', color: '#1C0E04', border: 'none', borderRadius: 8, padding: '12px 20px', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8, minWidth: 220, justifyContent: 'center' }}
+              >
+                Preview Certificate
+              </button>
+            )}
+            <button
+              onClick={handleCertificateAction}
+              disabled={certLoading || certStepIndex !== -1}
+              style={{ background: 'rgba(201,165,88,0.12)', color: '#C9A558', border: '1px solid rgba(201,165,88,0.45)', borderRadius: 8, padding: '12px 20px', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', cursor: certLoading || certStepIndex !== -1 ? 'not-allowed' : 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8, minWidth: 280, justifyContent: 'center', opacity: certLoading || certStepIndex !== -1 ? 0.7 : 1 }}
+            >
+              {certStepIndex !== -1
+                ? certSteps[certStepIndex]
+                : certDataUrl
+                  ? 'Certificate Ready'
+                  : showCertOptions
+                    ? 'Generate Certificate'
+                  : 'Get Ghanaian Name Certificate'}
+            </button>
+          </div>
+          {certStepIndex !== -1 && (
+            <p style={{ marginTop: 10, textAlign: 'center', color: '#BA9D7C', fontSize: 13 }}>
+              Step {certStepIndex + 1} of {certSteps.length}: {certSteps[certStepIndex]}
+            </p>
+          )}
+          {certError && (
+            <p style={{ marginTop: 10, textAlign: 'center', color: '#fca5a5', fontSize: 13 }}>
+              {certError}
+            </p>
+          )}
+        </div>
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+          <div ref={shareMenuRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShareMenuOpen((open) => !open)}
+              style={{
+                background: 'rgba(201,165,88,0.08)',
+                color: '#E8CB82',
+                border: '1px solid rgba(201,165,88,0.35)',
+                borderRadius: 999,
+                padding: '9px 16px',
+                fontFamily: "'Cinzel', serif",
+                fontSize: 11,
+                letterSpacing: '0.09em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                minWidth: 140,
+              }}
+            >
+              Share
+            </button>
+            {shareMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 230,
+                  background: '#120b06',
+                  border: '1px solid rgba(201,165,88,0.35)',
+                  borderRadius: 12,
+                  padding: 8,
+                  zIndex: 40,
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+                }}
+              >
+                {[
+                  { id: 'whatsapp', label: 'WhatsApp' },
+                  { id: 'x', label: 'X' },
+                  { id: 'tiktok', label: 'TikTok' },
+                  { id: 'instagram', label: 'Instagram' },
+                  { id: 'pinterest', label: 'Pinterest' },
+                  { id: 'telegram', label: 'Telegram' },
+                  { id: 'facebook', label: 'Facebook' },
+                  { id: 'email', label: 'Email' },
+                  { id: 'linkedin', label: 'LinkedIn' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleShareChannel(s.id)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      background: 'transparent',
+                      color: '#E8CB82',
+                      border: '1px solid rgba(201,165,88,0.2)',
+                      borderRadius: 8,
+                      padding: '8px 10px',
+                      fontFamily: "'Cinzel', serif",
+                      fontSize: 11,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      marginBottom: 6,
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        {shareMeta.isLocalWithoutPublic && (
+          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '7px 12px',
+                borderRadius: 999,
+                border: '1px solid rgba(239,68,68,0.35)',
+                background: 'rgba(239,68,68,0.1)',
+                color: '#fca5a5',
+                fontFamily: "'Cinzel', serif",
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Share Link: Local-Only
+            </span>
+          </div>
+        )}
+        {shareNotice && (
+          <p style={{ marginTop: 12, color: '#BA9D7C', fontSize: 13, lineHeight: 1.6 }}>
+            {shareNotice}
+          </p>
+        )}
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ border: '1px solid rgba(201,165,88,0.22)', borderRadius: 999, padding: '7px 12px', background: 'rgba(201,165,88,0.04)', display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <span style={{ color: '#9E7D42', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif" }}>Legal & Trust</span>
+            <Link to="/shipping-returns" style={{ color: '#C9A558', fontSize: 11, textDecoration: 'underline' }}>Shipping</Link>
+            <Link to="/privacy-policy" style={{ color: '#C9A558', fontSize: 11, textDecoration: 'underline' }}>Privacy</Link>
+            <Link to="/terms" style={{ color: '#C9A558', fontSize: 11, textDecoration: 'underline' }}>Terms</Link>
+            <Link to="/cookie-policy" style={{ color: '#C9A558', fontSize: 11, textDecoration: 'underline' }}>Cookies</Link>
+          </div>
         </div>
       </section>
 
@@ -369,12 +583,57 @@ export default function ResultPage() {
           <h2 className="section-title">Wear Your Heritage</h2>
           <p className="section-subtitle">Carry the spirit of {name} with you</p>
         </div>
+        <div style={{ maxWidth: 1120, margin: '0 auto 24px', padding: '0 20px' }}>
+          <div style={{ border: '1px solid rgba(201,165,88,0.22)', borderRadius: 12, background: 'rgba(201,165,88,0.04)', padding: '14px 16px' }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.14em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
+              Gifts for your day-born name
+            </div>
+            <p style={{ margin: 0, color: '#BA9D7C', fontSize: 14, lineHeight: 1.7 }}>
+              Pieces that match <strong style={{ color: '#E8CB82' }}>{day}</strong> names like <strong style={{ color: '#E8CB82' }}>{name}</strong>, then more from the collection.
+            </p>
+          </div>
+        </div>
         <GoldDivider />
-        <div className="product-grid" style={{ paddingTop: 24 }}>
-          {products.map(p => (
-            <ProductCard key={p.id} product={p} />
+        <h3 style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: 13,
+          letterSpacing: '0.16em',
+          color: '#C9A558',
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          margin: '28px 0 16px',
+          padding: '0 20px',
+        }}
+        >
+          {dayBornMatchCount > 0 ? `${day}-born · ${name}` : `Heritage gifts · ${name}`}
+        </h3>
+        <div className="product-grid" style={{ paddingTop: 0 }}>
+          {dayBornPrimary.map((p, idx) => (
+            <ProductCard key={p.id} product={p} animationIndex={idx} />
           ))}
         </div>
+        {otherProducts.length > 0 && (
+          <>
+            <h3 style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 13,
+              letterSpacing: '0.16em',
+              color: '#C9A558',
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              margin: '40px 0 16px',
+              padding: '0 20px',
+            }}
+            >
+              Other products
+            </h3>
+            <div className="product-grid" style={{ paddingTop: 0 }}>
+              {otherProducts.map((p, idx) => (
+                <ProductCard key={p.id} product={p} animationIndex={idx} />
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Back button */}
@@ -383,6 +642,61 @@ export default function ResultPage() {
           ← Discover Another Name
         </button>
       </div>
+
+      {certPreviewOpen && (
+        <div
+          onClick={() => setCertPreviewOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1200,
+            background: 'rgba(0,0,0,0.82)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 18,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(1100px, 96vw)',
+              maxHeight: '92vh',
+              overflow: 'auto',
+              background: '#0f0b05',
+              border: '1px solid rgba(201,165,88,0.35)',
+              borderRadius: 12,
+              padding: 14,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <p style={{ color: '#C9A558', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+                Certificate Preview
+              </p>
+              <button
+                onClick={() => setCertPreviewOpen(false)}
+                style={{ background: 'transparent', border: '1px solid rgba(201,165,88,0.35)', color: '#C9A558', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+            {certLoading ? (
+              <p style={{ color: '#BA9D7C' }}>Generating certificate...</p>
+            ) : (
+              <img src={certDataUrl} alt="Akan heritage certificate preview" style={{ width: '100%', height: 'auto', borderRadius: 8, border: '1px solid rgba(201,165,88,0.2)' }} />
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+              <button
+                onClick={() => triggerCertificateDownload(name, certDataUrl)}
+                style={{ background: 'linear-gradient(135deg,#C9A558,#E8CB82)', color: '#1C0E04', border: 'none', borderRadius: 8, padding: '10px 16px', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase' }}
+              >
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

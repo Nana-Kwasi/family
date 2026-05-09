@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 const messages = [
-  'Gift-ready Mother\'s Day Collection — now available',
-  'Meaningful gifts for remarkable mothers',
-  'Order early · Limited collection · Gift-ready designs',
-  'Celebrating heritage, strength & love',
+  'Gift-ready heritage collection now available',
+  'Heritage names, culture & keepsakes for the whole family',
+  'Limited bundles: Signature · Everyday · Legacy',
+  'Order early for smooth delivery and tracking',
 ];
 
 export default function AnnouncementStrip() {

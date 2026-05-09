@@ -33,8 +33,8 @@ export default function AdminUsersPage() {
               <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 28, color: '#C9A558', letterSpacing: '0.1em', marginBottom: 4 }}>Users</h1>
               <p style={{ color: '#7C5F48', fontStyle: 'italic' }}>{users.length} registered users</p>
             </div>
-            <button className="btn-ghost" style={{ width: 'auto', padding: '10px 24px' }} onClick={() => navigate('/admin/orders')}>
-              ← Orders
+            <button className="btn-ghost" style={{ width: 'auto', padding: '10px 24px' }} onClick={() => navigate('/admin/stories')}>
+              ← Stories
             </button>
           </div>
 

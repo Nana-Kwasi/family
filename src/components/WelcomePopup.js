@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
 
-const featured = [products[0], products[3]];
+const featured = [
+  products.find((p) => p.type === 'hoodie'),
+  products.find((p) => p.type === 'mug'),
+].filter(Boolean);
 
 export default function WelcomePopup() {
   const [visible, setVisible] = useState(false);
@@ -80,7 +83,7 @@ export default function WelcomePopup() {
         >
           {/* Eyebrow */}
           <p style={{
-            fontFamily: "'Montserrat', sans-serif", fontSize: 10,
+            fontFamily: "'Montserrat', sans-serif", fontSize: 12, fontWeight: 600,
             letterSpacing: '0.24em', color: '#C9A558',
             textTransform: 'uppercase', marginBottom: 14, textAlign: 'center',
           }}>
@@ -104,7 +107,7 @@ export default function WelcomePopup() {
           {/* Body */}
           <p style={{
             fontFamily: "'Times New Roman', Times, serif",
-            fontSize: 15, color: '#D4B896', fontStyle: 'italic',
+            fontSize: 17, color: '#D4B896', fontStyle: 'italic',
             lineHeight: 1.8, textAlign: 'center', marginBottom: 22,
           }}>
             Our Mother's Day collection features premium, heartfelt gifts crafted to honour
@@ -116,7 +119,7 @@ export default function WelcomePopup() {
           {/* Urgency pill */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
             <span style={{
-              fontFamily: "'Montserrat', sans-serif", fontSize: 10,
+              fontFamily: "'Montserrat', sans-serif", fontSize: 12, fontWeight: 600,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               background: 'rgba(200,130,108,0.18)', color: '#E8A882',
               border: '1px solid rgba(200,130,108,0.35)',
@@ -147,10 +150,10 @@ export default function WelcomePopup() {
                 />
                 <div style={{ padding: '10px 12px' }}>
                   <p style={{
-                    fontFamily: "'Playfair Display', serif", fontSize: 12,
+                    fontFamily: "'Playfair Display', serif", fontSize: 14,
                     color: '#EDD9BC', lineHeight: 1.3, marginBottom: 4,
                   }}>{p.name}</p>
-                  <p style={{ fontFamily: "'Cinzel', serif", fontSize: 13, color: '#C9A558' }}>
+                  <p style={{ fontFamily: "'Cinzel', serif", fontSize: 14, color: '#C9A558' }}>
                     ${p.price}
                   </p>
                 </div>
@@ -169,7 +172,7 @@ export default function WelcomePopup() {
 
           <p style={{
             textAlign: 'center', marginTop: 14,
-            fontFamily: "'Montserrat', sans-serif", fontSize: 11,
+            fontFamily: "'Montserrat', sans-serif", fontSize: 12,
             color: '#7C5F48', letterSpacing: '0.06em',
             cursor: 'pointer',
           }} onClick={close}>

@@ -161,7 +161,7 @@ export default function AboutPage() {
       <section style={{ borderTop: '1px solid rgba(201,165,88,0.1)', padding: '64px 0 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 40, padding: '0 20px' }}>
           <h2 className="section-title">Merchandise</h2>
-          <p className="section-subtitle">Meaningful gifts for remarkable mothers</p>
+          <p className="section-subtitle">Heritage names, culture, and gift-ready keepsakes for every generation</p>
         </div>
         <GoldDivider />
         <div className="product-grid" style={{ paddingTop: 24 }}>

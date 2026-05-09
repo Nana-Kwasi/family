@@ -1,25 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 
 const videos = [
-  { src: '/video/v1.mp4',                              eyebrow: "Mother's Day 2026",   heading: 'She Never Asked for Anything.',           sub: 'Honour her quietly. Honour her deeply. A gift made for the mother who gave you everything.' },
-  { src: '/video/v2.mp4',                              eyebrow: 'Limited Collection',  heading: 'This Year, Make It Mean Something.',       sub: 'Premium gift-ready pieces crafted to celebrate the strength and legacy of remarkable mothers.' },
-  { src: '/video/7763487-hd_1920_1080_30fps.mp4',      eyebrow: 'Gift Her Today',      heading: 'A Mother\'s Love Has No Equal.',           sub: 'Find something as extraordinary as the woman who raised you.' },
-  { src: '/video/8828300-uhd_3840_2160_25fps.mp4',     eyebrow: 'Celebrate Her',       heading: 'She Carried You. Now Carry Her Heart.',   sub: 'Our limited edition Mother\'s Day collection is almost gone. Secure her gift now.' },
-  { src: '/video/6250031-uhd_3840_2160_25fps.mp4',     eyebrow: 'Limited Edition',     heading: 'Because Ordinary Isn\'t Enough.',          sub: 'She gave you everything. Give her something she will treasure forever.' },
-  { src: '/video/7352723-uhd_2160_4096_30fps.mp4',     eyebrow: 'For Remarkable Moms', heading: 'Heritage. Strength. Grace.',              sub: 'Crafted with intention. Gifted with love. Made to honour the women who shape our world.' },
-  { src: '/video/7352724-uhd_2160_4096_30fps.mp4',     eyebrow: 'Last Few Remaining',  heading: 'Don\'t Let the Moment Pass.',              sub: 'Mother\'s Day comes once a year. Make sure she knows exactly how much she means to you.' },
+  { src: '/video/f.mp4', eyebrow: 'Heritage & Heart', heading: 'She Never Asked for Anything.', sub: 'Honour her quietly. Honour her deeply — a gift rooted in culture and gratitude.' },
+  { src: '/video/f1.mp4', eyebrow: 'Limited Collection', heading: 'This Year, Make It Mean Something.', sub: 'Premium gift-ready pieces that celebrate legacy, identity, and the people who raised us.' },
 ];
 
+function isCoarsePointer() {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.matchMedia('(pointer: coarse)').matches) return true;
+  } catch { /* ignore */ }
+  try {
+    return 'ontouchstart' in window && window.matchMedia('(max-width: 768px)').matches;
+  } catch {
+    return false;
+  }
+}
+
 export default function VideoShowcase({ compact = false }) {
-  const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [slideDir, setSlideDir] = useState('none');
   const [animating, setAnimating] = useState(false);
+  const videoRef = useRef(null);
   const total = videos.length;
 
   const goTo = useCallback((idx, dir = 'left') => {
     if (animating) return;
+    if (isCoarsePointer()) {
+      setCurrent((idx + total) % total);
+      setSlideDir('none');
+      return;
+    }
     setSlideDir(dir);
     setAnimating(true);
     setTimeout(() => {
@@ -28,6 +39,20 @@ export default function VideoShowcase({ compact = false }) {
       setTimeout(() => setAnimating(false), 50);
     }, 350);
   }, [animating, total]);
+
+  useLayoutEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = true;
+    el.defaultMuted = true;
+    el.setAttribute('muted', '');
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+    const p = el.play();
+    if (p !== undefined && typeof p.catch === 'function') {
+      p.catch(() => {});
+    }
+  }, [current]);
 
   useEffect(() => {
     const t = setInterval(() => goTo(current + 1, 'left'), 6000);
@@ -57,11 +82,13 @@ export default function VideoShowcase({ compact = false }) {
       {/* Video */}
       <video
         key={v.src}
+        ref={videoRef}
         src={v.src}
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
         style={{
           width: '100%', height: '100%',
           objectFit: 'cover', display: 'block',
@@ -73,17 +100,18 @@ export default function VideoShowcase({ compact = false }) {
       {/* Gradient overlay */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to top, rgba(18,10,4,0.93) 0%, rgba(18,10,4,0.4) 50%, rgba(18,10,4,0.15) 100%)',
+        background: 'linear-gradient(to top, rgba(8,4,2,0.98) 0%, rgba(12,7,4,0.78) 42%, rgba(12,7,4,0.3) 72%, rgba(12,7,4,0.12) 100%)',
         pointerEvents: 'none',
       }} />
 
       {/* Top-right badge */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
         <span style={{
-          fontFamily: "'Montserrat', sans-serif", fontSize: 9,
-          letterSpacing: '0.16em', color: '#E8A882', textTransform: 'uppercase',
-          background: 'rgba(200,130,108,0.22)', border: '1px solid rgba(200,130,108,0.4)',
-          borderRadius: 50, padding: '4px 12px',
+          fontFamily: "'Montserrat', sans-serif", fontSize: 11, fontWeight: 700,
+          letterSpacing: '0.14em', color: '#1C0E04', textTransform: 'uppercase',
+          background: 'rgba(255,215,140,0.96)', border: '1px solid rgba(255,225,165,1)',
+          borderRadius: 50, padding: '6px 14px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
         }}>Limited Edition</span>
       </div>
 
@@ -91,24 +119,28 @@ export default function VideoShowcase({ compact = false }) {
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: 'clamp(20px,3vw,32px)',
+        background: 'linear-gradient(to top, rgba(8,4,2,0.72) 0%, rgba(8,4,2,0.34) 60%, rgba(8,4,2,0) 100%)',
         ...slideStyle[slideDir],
       }}>
         <p style={{
-          fontFamily: "'Montserrat', sans-serif", fontSize: 9,
+          fontFamily: "'Montserrat', sans-serif", fontSize: 11, fontWeight: 600,
           letterSpacing: '0.24em', color: '#C9A558',
           textTransform: 'uppercase', marginBottom: 8,
+          textShadow: '0 2px 10px rgba(0,0,0,0.75)',
         }}>{v.eyebrow}</p>
         <h3 style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: 'clamp(18px, 2.5vw, 26px)',
+          fontSize: 'clamp(22px, 3.1vw, 34px)',
           color: '#FAF0E0', fontWeight: 700,
           lineHeight: 1.2, marginBottom: 8,
+          textShadow: '0 2px 12px rgba(0,0,0,0.78)',
         }}>{v.heading}</h3>
         <p style={{
           fontFamily: "'Times New Roman', Times, serif",
-          fontSize: 13, color: '#D4B896',
+          fontSize: 16, color: '#F6E3CC',
           fontStyle: 'italic', lineHeight: 1.65,
           marginBottom: 20, maxWidth: 400,
+          textShadow: '0 2px 10px rgba(0,0,0,0.82)',
         }}>{v.sub}</p>
 
         {/* Dots + counter row */}

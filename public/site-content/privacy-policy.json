@@ -1,0 +1,30 @@
+{
+  "title": "Privacy Policy",
+  "intro": "This policy describes our information practices for visitors in the US, EU, and worldwide.",
+  "sections": [
+    {
+      "heading": "Data We Collect",
+      "paragraphs": [
+        "We do not collect customer account data on this site. Visitors can browse, discover Akan names, and use public features without creating a user account. Admin access is restricted to Mama Africa only."
+      ]
+    },
+    {
+      "heading": "How We Use Data",
+      "paragraphs": [
+        "Until you accept analytics cookies, Google Analytics tags do not load and analytics_storage stays denied (Consent Mode). Where you grant consent, limited non-personal analytics events may be used to improve site performance and conversion flow. We do not sell personal data."
+      ]
+    },
+    {
+      "heading": "EU & UK Rights",
+      "paragraphs": [
+        "If you are in the EU/UK, you may request details about any personal data you submit directly via support communications and request deletion where applicable."
+      ]
+    },
+    {
+      "heading": "Contact",
+      "paragraphs": [
+        "Privacy requests and support: Mamaafricaafia@gmail.com"
+      ]
+    }
+  ]
+}

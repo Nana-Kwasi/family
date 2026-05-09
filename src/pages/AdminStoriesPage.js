@@ -9,11 +9,17 @@ import { db } from '../firebase';
 
 // ── Reusable form fields ──────────────────────────────────────────────────────
 
-function StoryForm({ form, setForm, socialLinks, setSocialLinks, onSubmit, saving, error, success, submitLabel }) {
+function StoryForm({ form, setForm, chapters, setChapters, socialLinks, setSocialLinks, onSubmit, saving, error, success, submitLabel }) {
+  const isProverb = form.type === 'proverb';
   function addLinkRow() { setSocialLinks(l => [...l, { label: '', url: '' }]); }
   function removeLinkRow(i) { setSocialLinks(l => l.filter((_, idx) => idx !== i)); }
   function updateLink(i, field, value) {
     setSocialLinks(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item));
+  }
+  function addChapter() { setChapters(c => [...c, { heading: '', content: '' }]); }
+  function removeChapter(i) { setChapters(c => c.filter((_, idx) => idx !== i)); }
+  function updateChapter(i, field, value) {
+    setChapters(c => c.map((item, idx) => (idx === i ? { ...item, [field]: value } : item)));
   }
 
   return (
@@ -22,7 +28,7 @@ function StoryForm({ form, setForm, socialLinks, setSocialLinks, onSubmit, savin
         <label className="field-label">Type</label>
         <div style={{ display: 'flex', gap: 12 }}>
           {['story', 'proverb'].map(t => (
-            <button key={t} type="button" onClick={() => setForm(f => ({ ...f, type: t }))}
+            <button key={t} type="button" onClick={() => setForm(f => ({ ...f, type: t, contentType: t === 'proverb' ? 'general' : (f.contentType || 'general') }))}
               style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid rgba(201,165,88,0.3)', background: form.type === t ? 'rgba(201,165,88,0.15)' : 'none', color: form.type === t ? '#C9A558' : '#7C5F48', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', textTransform: 'capitalize', cursor: 'pointer' }}>
               {t === 'story' ? 'Story' : 'Proverb'}
             </button>
@@ -36,6 +42,21 @@ function StoryForm({ form, setForm, socialLinks, setSocialLinks, onSubmit, savin
           onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="afia-input-plain" />
       </div>
 
+      {!isProverb && (
+        <div className="form-field">
+          <label className="field-label">Content Type</label>
+          <select
+            value={form.contentType}
+            onChange={e => setForm(f => ({ ...f, contentType: e.target.value }))}
+            className="afia-input-plain"
+          >
+            <option value="general">General</option>
+            <option value="cultural-storybook">Cultural Storybook</option>
+            <option value="diaspora-learning-edition">Diaspora Learning Edition</option>
+          </select>
+        </div>
+      )}
+
       <div className="form-field">
         <label className="field-label">Content *</label>
         <textarea
@@ -43,6 +64,45 @@ function StoryForm({ form, setForm, socialLinks, setSocialLinks, onSubmit, savin
           value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
           className="afia-input-plain" rows={8} style={{ resize: 'vertical', minHeight: 160 }} required />
       </div>
+
+      {!isProverb && (
+        <div className="form-field">
+          <label className="field-label">Chapters (optional)</label>
+          {chapters.map((ch, i) => (
+            <div key={i} style={{ marginBottom: 12, padding: 12, border: '1px solid rgba(201,165,88,0.2)', borderRadius: 8 }}>
+              <input
+                type="text"
+                placeholder={`Chapter ${i + 1} heading`}
+                value={ch.heading}
+                onChange={e => updateChapter(i, 'heading', e.target.value)}
+                className="afia-input-plain"
+                style={{ marginBottom: 8 }}
+              />
+              <textarea
+                placeholder="Chapter content..."
+                value={ch.content}
+                onChange={e => updateChapter(i, 'content', e.target.value)}
+                className="afia-input-plain"
+                rows={4}
+                style={{ resize: 'vertical', minHeight: 90, marginBottom: 8 }}
+              />
+              {chapters.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeChapter(i)}
+                  style={{ background: 'none', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                >
+                  Remove Chapter
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addChapter}
+            style={{ background: 'none', border: '1px dashed rgba(201,165,88,0.3)', color: '#9E7D42', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.1em', padding: '8px 16px', borderRadius: 6, textTransform: 'uppercase', marginTop: 4 }}>
+            + Add Chapter
+          </button>
+        </div>
+      )}
 
       <div className="form-field">
         <label className="field-label">Social Links — "Listen to this more"</label>
@@ -76,7 +136,8 @@ function StoryForm({ form, setForm, socialLinks, setSocialLinks, onSubmit, savin
 function PostCard({ s, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ type: s.type, title: s.title || '', content: s.content || '' });
+  const [form, setForm] = useState({ type: s.type, title: s.title || '', content: s.content || '', contentType: s.contentType || 'general' });
+  const [chapters, setChapters] = useState(s.chapters?.length ? s.chapters : [{ heading: '', content: '' }]);
   const [socialLinks, setSocialLinks] = useState(s.socialLinks?.length ? s.socialLinks : [{ label: '', url: '' }]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -90,10 +151,17 @@ function PostCard({ s, onDelete }) {
     const validLinks = socialLinks.filter(l => l.label.trim() && l.url.trim());
     setSaving(true);
     try {
+      const cleanChapters = chapters.map(c => ({
+        heading: c.heading.trim(),
+        content: c.content.trim(),
+      })).filter(c => c.heading || c.content);
+      const finalType = form.type === 'proverb' ? 'general' : (form.contentType || 'general');
       await updateDoc(doc(db, 'stories', s.id), {
         type: form.type,
         title: form.title.trim(),
         content: form.content.trim(),
+        contentType: finalType,
+        chapters: form.type === 'proverb' ? [] : cleanChapters,
         socialLinks: validLinks,
       });
       setSuccess('Updated successfully!');
@@ -145,6 +213,16 @@ function PostCard({ s, onDelete }) {
           <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 16, color: '#BA9D7C', lineHeight: 1.8, fontStyle: s.type === 'proverb' ? 'italic' : 'normal', whiteSpace: 'pre-line' }}>
             {s.content}
           </p>
+          {s.chapters?.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              {s.chapters.map((ch, idx) => (
+                <div key={idx} style={{ marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid rgba(201,165,88,0.12)' }}>
+                  {ch.heading && <h4 style={{ fontFamily: "'Cinzel', serif", fontSize: 12, color: '#C9A558', marginBottom: 6 }}>{ch.heading}</h4>}
+                  <p style={{ color: '#BA9D7C', whiteSpace: 'pre-line' }}>{ch.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
           {s.socialLinks?.length > 0 && (
             <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(201,165,88,0.1)' }}>
               <p style={{ fontSize: 12, color: '#7C5F48', fontFamily: "'Cinzel', serif", letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Social Links</p>
@@ -164,6 +242,7 @@ function PostCard({ s, onDelete }) {
         <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(201,165,88,0.12)' }}>
           <StoryForm
             form={form} setForm={setForm}
+            chapters={chapters} setChapters={setChapters}
             socialLinks={socialLinks} setSocialLinks={setSocialLinks}
             onSubmit={handleUpdate} saving={saving}
             error={error} success={success}
@@ -184,7 +263,8 @@ export default function AdminStoriesPage() {
   const [bookReviews, setBookReviews] = useState([]);
   const [storyReviews, setStoryReviews] = useState([]);
   const [readCount, setReadCount] = useState(0);
-  const [form, setForm] = useState({ type: 'story', title: '', content: '' });
+  const [form, setForm] = useState({ type: 'story', title: '', content: '', contentType: 'general' });
+  const [chapters, setChapters] = useState([{ heading: '', content: '' }]);
   const [socialLinks, setSocialLinks] = useState([{ label: '', url: '' }]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -232,11 +312,19 @@ export default function AdminStoriesPage() {
     const validLinks = socialLinks.filter(l => l.label.trim() && l.url.trim());
     setSaving(true);
     try {
+      const cleanChapters = chapters.map(c => ({
+        heading: c.heading.trim(),
+        content: c.content.trim(),
+      })).filter(c => c.heading || c.content);
+      const finalType = form.type === 'proverb' ? 'general' : (form.contentType || 'general');
       await addDoc(collection(db, 'stories'), {
         type: form.type, title: form.title.trim(), content: form.content.trim(),
+        contentType: finalType,
+        chapters: form.type === 'proverb' ? [] : cleanChapters,
         socialLinks: validLinks, authorId: user.id, createdAt: serverTimestamp(),
       });
-      setForm({ type: 'story', title: '', content: '' });
+      setForm({ type: 'story', title: '', content: '', contentType: 'general' });
+      setChapters([{ heading: '', content: '' }]);
       setSocialLinks([{ label: '', url: '' }]);
       setSuccess('Posted successfully!');
       setTab('posts');
@@ -297,6 +385,7 @@ export default function AdminStoriesPage() {
             <div className="afia-card">
               <StoryForm
                 form={form} setForm={setForm}
+                chapters={chapters} setChapters={setChapters}
                 socialLinks={socialLinks} setSocialLinks={setSocialLinks}
                 onSubmit={handlePost} saving={saving}
                 error={error} success={success}

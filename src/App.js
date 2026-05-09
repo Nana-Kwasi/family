@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import Navbar from './components/Navbar';
@@ -14,6 +14,7 @@ import StorePage from './pages/StorePage';
 import StoriesPage from './pages/StoriesPage';
 import LoginPage from './pages/LoginPage';
 import AccountPage from './pages/AccountPage';
+import AdminRouteGate from './components/AdminRouteGate';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminStoriesPage from './pages/AdminStoriesPage';
 import CultureHubPage from './pages/CultureHubPage';
@@ -23,11 +24,29 @@ import ClansPage from './pages/ClansPage';
 import CalendarPage from './pages/CalendarPage';
 import DiasporaPage from './pages/DiasporaPage';
 import ProductDetailPage from './pages/ProductDetailPage';
-import CheckoutPage from './pages/CheckoutPage';
-import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import BundleDetailPage from './pages/BundleDetailPage';
+import ShippingReturnsPage from './pages/ShippingReturnsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import CookieConsentBanner from './components/CookieConsentBanner';
+import { trackEvent, bootstrapAnalyticsFromStorage } from './utils/analytics';
 
 function AppShell() {
   const { authLoading } = useAuth();
+  const location = useLocation();
+  const isSpreadLayout =
+    location.pathname !== '/' &&
+    !location.pathname.startsWith('/store') &&
+    !location.pathname.startsWith('/bundle');
+
+  useEffect(() => {
+    bootstrapAnalyticsFromStorage();
+  }, []);
+
+  useEffect(() => {
+    trackEvent('page_view', { page_path: location.pathname });
+  }, [location.pathname]);
 
   if (authLoading) {
     return (
@@ -56,31 +75,37 @@ function AppShell() {
 
   return (
     <CartProvider>
+      <CookieConsentBanner />
       <WelcomePopup />
       <AnnouncementStrip />
       <Navbar />
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/result" element={<ResultPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/store" element={<StorePage />} />
-        <Route path="/stories" element={<StoriesPage />} />
-        <Route path="/auth" element={<LoginPage />} />
-        <Route path="/account" element={<AccountPage />} />
-        <Route path="/admin/stories" element={<AdminStoriesPage />} />
-        <Route path="/admin/users" element={<AdminUsersPage />} />
-        <Route path="/culture" element={<CultureHubPage />} />
-        <Route path="/culture/adinkra" element={<AdinkraPage />} />
-        <Route path="/culture/twi" element={<TwiPage />} />
-        <Route path="/culture/clans" element={<ClansPage />} />
-        <Route path="/culture/calendar" element={<CalendarPage />} />
-        <Route path="/diaspora" element={<DiasporaPage />} />
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <div className={isSpreadLayout ? 'global-spread-layout' : ''}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/result" element={<ResultPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/store" element={<StorePage />} />
+          <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/auth" element={<LoginPage />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route path="/admin/stories" element={<AdminRouteGate><AdminStoriesPage /></AdminRouteGate>} />
+          <Route path="/admin/users" element={<AdminRouteGate><AdminUsersPage /></AdminRouteGate>} />
+          <Route path="/culture" element={<CultureHubPage />} />
+          <Route path="/culture/adinkra" element={<AdinkraPage />} />
+          <Route path="/culture/twi" element={<TwiPage />} />
+          <Route path="/culture/clans" element={<ClansPage />} />
+          <Route path="/culture/calendar" element={<CalendarPage />} />
+          <Route path="/diaspora" element={<DiasporaPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/bundle/:bundleId" element={<BundleDetailPage />} />
+          <Route path="/shipping-returns" element={<ShippingReturnsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
       <Footer />
     </CartProvider>
   );

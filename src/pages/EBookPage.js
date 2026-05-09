@@ -131,6 +131,43 @@ function BookBlock({ block }) {
           ))}
         </div>
       );
+    case 'image':
+      return (
+        <figure
+          style={{
+            display: 'block',
+            width: 'fit-content',
+            maxWidth: 'min(100%, 920px)',
+            margin: '22px auto 26px',
+            border: '1px solid rgba(201,165,88,0.22)',
+            borderRadius: 10,
+            overflow: 'hidden',
+            background: 'rgba(201,165,88,0.06)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 16px', boxSizing: 'border-box' }}>
+            <img
+              src={block.src}
+              alt={block.alt || ''}
+              loading="lazy"
+              style={{
+                display: 'block',
+                margin: '0 auto',
+                maxWidth: '100%',
+                width: 'auto',
+                height: 'auto',
+                maxHeight: 'clamp(200px, 42vh, 380px)',
+                objectFit: 'contain',
+              }}
+            />
+          </div>
+          {block.caption && (
+            <figcaption style={{ fontFamily: "'EB Garamond', serif", fontSize: 16, color: '#9E7D42', fontStyle: 'italic', padding: '10px 14px 12px', textAlign: 'center', lineHeight: 1.45, borderTop: '1px solid rgba(201,165,88,0.12)' }}>
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
     default:
       return null;
   }

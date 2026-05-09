@@ -1,0 +1,24 @@
+{
+  "title": "Cookie Policy",
+  "intro": "Cookie controls are available at first visit. Analytics tags load only after you accept analytics cookies.",
+  "sections": [
+    {
+      "heading": "Necessary Cookies",
+      "paragraphs": [
+        "These cookies support core functionality such as essential site behavior and admin-only security state."
+      ]
+    },
+    {
+      "heading": "Analytics Cookies (Consent Required in EU/UK)",
+      "paragraphs": [
+        "We use Google Analytics with Consent Mode v2: analytics_storage defaults to denied until you opt in via the banner. Analytics cookies help us understand non-personal engagement patterns and improve conversion flows."
+      ]
+    },
+    {
+      "heading": "Contact",
+      "paragraphs": [
+        "Cookie/privacy questions: Mamaafricaafia@gmail.com"
+      ]
+    }
+  ]
+}

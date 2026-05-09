@@ -47,6 +47,7 @@ export const bookSections = [
       { type: 'heading', text: 'Foreword' },
       { type: 'body', text: 'In many African societies, a name is never just a name. It carries memory, identity, ancestry, responsibility, and spirit. Among the Akan people of Ghana, this truth is beautifully expressed through the tradition of Outdooring (Aba-Dinto), the formal naming and public presentation of a child on the eighth day after birth.' },
       { type: 'body', text: 'This ceremony is more than a family custom. It is a sacred welcome. It is a public declaration that a child has arrived, belongs, and is now part of a lineage, a people, and a living heritage. Through this act, the child is introduced not only to relatives and elders, but also to the moral and cultural world of the community.' },
+      { type: 'image', src: '/images/name ceremony.jpeg', alt: 'Akan outdooring and naming gathering', caption: 'Community and family gather for the naming and presentation of a child.' },
       { type: 'body', text: 'This book offers more than information. It offers restoration.' },
       { type: 'body', text: 'For children, it provides a simple and meaningful introduction to Akan day names and the significance of birth identity. For parents and elders, it serves as a teaching tool to help pass on tradition. For readers in the diaspora or anyone separated from their cultural roots, it opens a doorway back to memory, belonging, and self-discovery.' },
       { type: 'body', text: 'There is great value in knowing the customs that shaped our ancestors. There is also great healing in reclaiming what has been forgotten or interrupted. By learning the meaning of Outdooring (Aba-Dinto), readers may come to understand that even when traditions are delayed, they are not lost forever.' },
@@ -98,6 +99,7 @@ export const bookSections = [
       { type: 'chapter', number: 1, text: 'What Is Outdooring (Aba-Dinto)?' },
       { type: 'body', text: 'In Ghanaian culture, it is customary to formally name each child born into a family. This naming is a special way of acknowledging, honoring, and welcoming the newborn.' },
       { type: 'body', text: 'Among the Akan people, this ceremony is called Outdooring (Aba-Dinto). It is the traditional naming ceremony in which a baby is brought out to meet the extended family and the community for the first time.' },
+      { type: 'image', src: '/images/name ceremony1.jpeg', alt: 'Outdooring naming ceremony', caption: 'The eighth-day welcome: presentation, blessing, and day name.' },
       { type: 'body', text: 'Traditionally, the ceremony takes place on the eighth day after birth. Parents keep the baby indoors during the first week of life, protecting the child from public view and from harmful spiritual influences. On the eighth day, the child is formally presented and named.' },
       { type: 'body', text: 'In earlier times, our ancestors did not rely on the modern Western calendar. Instead, they counted the days of the week in cycles. Thus, a child born on Sunday would be named on the following Sunday, which would be counted as the eighth day.' },
       { type: 'body', text: 'The child receives a first name according to the day of the week on which he or she was born. This first name becomes the child\'s kradin, or soul name. It is often followed by a family name honoring a grandparent or ancestor, and then by the father\'s surname.' },
@@ -154,6 +156,7 @@ export const bookSections = [
     content: [
       { type: 'chapter', number: 4, text: 'Program Outline for Outdooring (Aba-Dinto)' },
       { type: 'body', text: 'The following simple outline shows how a traditional Outdooring (Aba-Dinto) ceremony may take place.' },
+      { type: 'image', src: '/images/name ceremony2.jpeg', alt: 'Celebration at an outdooring', caption: 'Food, elders, and joy mark the day the child meets the wider family.' },
       { type: 'table', headers: ['Time', 'Activity'], rows: [
         ['5:00–6:00 a.m.', 'Close relatives and friends of the mother begin food preparation'],
         ['Early morning', 'The mother and baby are dressed and made ready for presentation'],

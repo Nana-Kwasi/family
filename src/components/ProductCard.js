@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
-// Replace with Afia's real Printify storefront URL when available
-const PRINTIFY_STORE_URL = '#';
+import { buildTrackedExternalUrl } from '../utils/commerceLinks';
+import { trackEvent } from '../utils/analytics';
+import { getOfficialPurchaseTarget } from '../utils/storefront';
 
 const ExternalIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -12,122 +12,217 @@ const ExternalIcon = () => (
   </svg>
 );
 
-export default function ProductCard({ product }) {
-  function handleShop() {
-    if (PRINTIFY_STORE_URL === '#') {
+export default function ProductCard({ product, animationIndex = 0 }) {
+  const { url: targetUrl } = getOfficialPurchaseTarget(product);
+  const buyLabel = 'Buy now';
+
+  function handleShop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!targetUrl) {
       alert('Our store is coming soon! Check back shortly.');
       return;
     }
-    window.open(PRINTIFY_STORE_URL, '_blank', 'noopener,noreferrer');
+    const trackedUrl = buildTrackedExternalUrl(targetUrl, {
+      campaign: 'store_buy',
+      content: `card_${product.id}`,
+    });
+    trackEvent('click_buy_external', {
+      location: 'product_card',
+      product_id: product.id,
+      product_name: product.name,
+    });
+    window.open(trackedUrl, '_blank', 'noopener,noreferrer');
   }
 
+  const blurb = product.cardBlurb || product.tagline || '';
+
   return (
-    <div className="afia-card" style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: 0, overflow: 'hidden' }}>
-      {/* Product image — links to detail page */}
-      <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
-      <div style={{ background: '#231510', height: 240, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
-        <img
-          src={product.image}
-          alt={product.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-        />
-        <div style={{
-          position: 'absolute', top: 12, right: 12,
-          background: 'rgba(201,165,88,0.92)', color: '#1C0E04',
-          fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.1em',
-          padding: '3px 10px', borderRadius: 50, textTransform: 'uppercase',
-        }}>
+    <article
+      className="store-product-card store-card-fade-in store-product-card--split"
+      aria-labelledby={`store-card-title-${product.id}`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: 14,
+        animationDelay: `${Math.min(animationIndex, 11) * 55}ms`,
+      }}
+    >
+      <Link
+        to={`/product/${product.id}`}
+        className="store-product-card__media"
+        style={{
+          position: 'relative',
+          display: 'block',
+          textDecoration: 'none',
+          color: 'inherit',
+        }}
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 1,
+            background: 'linear-gradient(135deg, #E5C07B 0%, #C9A54C 70%, #8A6B2D 100%)',
+            color: '#111111',
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 9,
+            letterSpacing: '0.1em',
+            fontWeight: 700,
+            padding: '4px 9px',
+            borderRadius: 999,
+            textTransform: 'uppercase',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          }}
+        >
           {product.label || product.type}
+        </span>
+        <div
+          className="store-product-card__well"
+          style={{
+            aspectRatio: '1 / 1',
+            width: '100%',
+            background: '#E8E6E2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            boxSizing: 'border-box',
+          }}
+        >
+          <img
+            className="store-product-image store-product-card__img"
+            src={product.image}
+            alt={product.name}
+            decoding="async"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              width: 'auto',
+              height: 'auto',
+              objectFit: 'contain',
+              objectPosition: 'center',
+              display: 'block',
+            }}
+          />
         </div>
-        {/* Gift Ready badge */}
-        <div style={{
-          position: 'absolute', top: 12, left: 12,
-          background: 'rgba(180,100,60,0.85)', color: '#fff',
-          fontFamily: "'Montserrat', sans-serif", fontSize: 9, letterSpacing: '0.1em',
-          padding: '3px 8px', borderRadius: 50, textTransform: 'uppercase',
-        }}>
-          Gift Ready
-        </div>
-      </div>
       </Link>
 
-      <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        {/* Tagline */}
-        {product.tagline && (
-          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.12em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 6 }}>
-            {product.tagline}
-          </p>
-        )}
-
-        {/* Name — links to detail page */}
-        <Link to={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
-          <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, color: '#EDD9BC', letterSpacing: '0.02em', marginBottom: 8, lineHeight: 1.4, transition: 'color 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#C9A558'}
-            onMouseLeave={e => e.currentTarget.style.color = '#EDD9BC'}
+      <div
+        className="store-product-card__body"
+        style={{
+          padding: '16px 16px 18px',
+          background: '#FAF9F7',
+          borderTop: '1px solid rgba(0,0,0,0.06)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0,
+          flex: 1,
+        }}
+      >
+        <Link
+          to={`/product/${product.id}`}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 14,
+            textDecoration: 'none',
+            marginBottom: 8,
+          }}
+        >
+          <h3
+            id={`store-card-title-${product.id}`}
+            className="store-product-title"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 'clamp(16px, 2.2vw, 19px)',
+              color: '#1a1a1a',
+              letterSpacing: '0.01em',
+              margin: 0,
+              lineHeight: 1.35,
+              fontWeight: 700,
+              flex: '1 1 auto',
+              minWidth: 0,
+            }}
           >
             {product.name}
           </h3>
+          <span
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#8B6914',
+              letterSpacing: '0.02em',
+              flexShrink: 0,
+            }}
+          >
+            ${product.price}
+          </span>
         </Link>
 
-        {/* Description */}
-        <p style={{ color: '#BA9D7C', fontSize: 16, lineHeight: 1.85, marginBottom: 14, fontFamily: "'Times New Roman', Times, serif" }}>
-          {product.description}
+        <p
+          style={{
+            margin: '0 0 14px',
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: 13,
+            lineHeight: 1.45,
+            color: '#5a5a5a',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {blurb}
         </p>
 
-        {/* Perfect For */}
-        {product.perfectFor && product.perfectFor.length > 0 && (
-          <div style={{ marginBottom: 14 }}>
-            <p style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.14em', color: '#9E7D42', textTransform: 'uppercase', marginBottom: 6 }}>
-              Perfect For
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {product.perfectFor.map((f, i) => (
-                <span key={i} style={{
-                  fontFamily: "'Montserrat', sans-serif", fontSize: 11,
-                  color: '#C9A558', border: '1px solid rgba(201,165,88,0.3)',
-                  borderRadius: 50, padding: '2px 10px', letterSpacing: '0.04em',
-                }}>{f}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Sizes */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
-          {product.sizes.slice(0, 6).map(s => (
-            <span key={s} style={{
-              fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.08em',
-              color: '#BA9D7C', border: '1px solid rgba(201,165,88,0.2)',
-              borderRadius: 3, padding: '3px 9px',
-            }}>{s}</span>
-          ))}
-        </div>
-
-        {/* Price + CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 24, color: '#C9A558', letterSpacing: '0.05em' }}>
-            ${product.price}
-          </div>
+        <div className="store-product-card-actions store-product-card-actions--official" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto' }}>
           <button
+            type="button"
+            className="store-btn-primary store-btn-primary--full"
             onClick={handleShop}
             style={{
-              background: 'linear-gradient(135deg, #C9A558, #E8CB82)',
-              color: '#1C0E04', border: 'none', borderRadius: 6,
-              padding: '10px 18px', fontFamily: "'Montserrat', sans-serif",
-              fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 7,
-              textTransform: 'uppercase', fontWeight: 600,
+              width: '100%',
+              background: 'linear-gradient(135deg, #E5C07B 0%, #C9A54C 100%)',
+              color: '#111111',
+              border: '1px solid rgba(139,105,20,0.35)',
+              borderRadius: 999,
+              padding: '11px 16px',
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 12,
+              letterSpacing: '0.1em',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              textTransform: 'uppercase',
+              fontWeight: 700,
               transition: 'all 0.2s ease',
+              boxShadow: '0 4px 14px rgba(139,105,20,0.2)',
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(201,165,88,0.35)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
           >
-            <ExternalIcon /> Gift This
+            <ExternalIcon /> {buyLabel}
           </button>
+          <Link
+            to={`/product/${product.id}`}
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 11,
+              letterSpacing: '0.06em',
+              color: '#8B6914',
+              textDecoration: 'underline',
+            }}
+          >
+            Sizes & details
+          </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

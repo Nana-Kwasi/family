@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ADMIN_OTP_GATE_KEY } from '../constants/adminSession';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -9,16 +10,18 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user?.isAdmin;
+  const adminNavUnlocked = Boolean(
+    user?.isAdmin && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(ADMIN_OTP_GATE_KEY),
+  );
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
     { label: 'Store', path: '/store' },
-    { label: 'About Afia', path: '/about' },
+    { label: 'About Mama Africa', path: '/about' },
     { label: 'Stories', path: '/stories' },
     { label: 'Culture', path: '/culture' },
   ];
-  if (isAdmin) {
+  if (adminNavUnlocked) {
     navLinks.push({ label: 'Stories Admin', path: '/admin/stories' });
   }
 
@@ -34,9 +37,9 @@ export default function Navbar() {
         <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
           <img src="/images/logo.png" alt="Mama Africa" style={{ height: 68, width: 68, objectFit: 'contain', borderRadius: '50%' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span className="nav-logo-text">AFIA</span>
+            <span className="nav-logo-text">Mama Africa Official</span>
             <span className="nav-tagline">
-              Meaningful gifts for remarkable mothers
+              Ghana · Heritage, culture & keepsakes
             </span>
           </div>
         </Link>

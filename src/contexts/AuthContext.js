@@ -13,8 +13,9 @@ import {
   doc, setDoc, getDoc, getDocs, collection, serverTimestamp, query, orderBy,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { ADMIN_OTP_GATE_KEY, ADMIN_AFTER_LOGIN_KEY } from '../constants/adminSession';
 
-const ADMIN_EMAIL = 'mquachie@gmail.com';
+const ADMIN_EMAIL = (process.env.REACT_APP_ADMIN_EMAIL || 'Mamaafricaafia@gmail.com').toLowerCase();
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -24,7 +25,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const isAdmin = firebaseUser.email === ADMIN_EMAIL;
+        const userEmail = (firebaseUser.email || '').toLowerCase();
+        const isAdmin = Boolean(userEmail) && userEmail === ADMIN_EMAIL;
         try {
           const ref = doc(db, 'users', firebaseUser.uid);
           const snap = await getDoc(ref);
@@ -59,6 +61,10 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      if ((email || '').toLowerCase() === ADMIN_EMAIL) {
+        sessionStorage.setItem(ADMIN_OTP_GATE_KEY, '1');
+        sessionStorage.setItem(ADMIN_AFTER_LOGIN_KEY, '1');
+      }
       return { success: true };
     } catch (err) {
       console.error('Login error code:', err.code);
@@ -72,7 +78,7 @@ export function AuthProvider({ children }) {
       await setDoc(doc(db, 'users', fb.uid), {
         name,
         email,
-        isAdmin: email === ADMIN_EMAIL,
+        isAdmin: (email || '').toLowerCase() === ADMIN_EMAIL,
         createdAt: serverTimestamp(),
       });
       return { success: true };
@@ -82,6 +88,8 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
+    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
     await signOut(auth);
   }
 

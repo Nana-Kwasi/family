@@ -30,7 +30,7 @@ export default function HeroBanner({
           {eyebrow && (
             <p style={{
               fontFamily: "'Montserrat', sans-serif",
-              fontSize: 11, letterSpacing: '0.22em',
+              fontSize: 12, letterSpacing: '0.22em',
               color: '#C9A558', textTransform: 'uppercase', marginBottom: 16,
             }}>
               {eyebrow}
@@ -62,7 +62,7 @@ export default function HeroBanner({
           {smallText && (
             <p style={{
               fontFamily: "'Montserrat', sans-serif",
-              fontSize: 12, letterSpacing: '0.08em',
+              fontSize: 13, letterSpacing: '0.08em',
               color: 'rgba(201,165,88,0.6)',
               marginBottom: 28,
             }}>
@@ -75,7 +75,7 @@ export default function HeroBanner({
                 <button
                   onClick={ctaPrimary.action}
                   className="btn-gold"
-                  style={{ width: 'auto', padding: '12px 28px', fontFamily: "'Montserrat', sans-serif", fontSize: 12 }}
+                  style={{ width: 'auto', padding: '12px 28px', fontFamily: "'Montserrat', sans-serif", fontSize: 13 }}
                 >
                   {ctaPrimary.label}
                 </button>
@@ -84,7 +84,7 @@ export default function HeroBanner({
                 <button
                   onClick={ctaSecondary.action}
                   className="btn-ghost"
-                  style={{ width: 'auto', padding: '12px 28px', fontFamily: "'Montserrat', sans-serif", fontSize: 12 }}
+                  style={{ width: 'auto', padding: '12px 28px', fontFamily: "'Montserrat', sans-serif", fontSize: 13 }}
                 >
                   {ctaSecondary.label}
                 </button>

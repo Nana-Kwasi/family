@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const PersonIcon = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -13,9 +14,15 @@ export default function Footer() {
       <div style={styles.inner}>
         <div style={styles.icon}><PersonIcon /></div>
         <div style={styles.name}>AFIA</div>
-        <div style={styles.tagline}>Meaningful gifts for remarkable mothers</div>
+        <div style={styles.tagline}>Heritage names, culture & meaningful keepsakes for every generation</div>
         <div style={{ ...styles.tagline, fontSize: 13, opacity: 0.6, marginTop: -2 }}>Gye Nyame — Except God, I fear none</div>
-        <div style={styles.copy}>© 2026 Afia · Mama Africa. All rights reserved.</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
+          <Link to="/shipping-returns" style={styles.link}>Shipping & Returns</Link>
+          <Link to="/privacy-policy" style={styles.link}>Privacy Policy</Link>
+          <Link to="/terms" style={styles.link}>Terms</Link>
+          <Link to="/cookie-policy" style={styles.link}>Cookie Policy</Link>
+        </div>
+        <div style={styles.copy}>© 2026 Mama Africa Official. All rights reserved.</div>
       </div>
     </footer>
   );
@@ -57,5 +64,11 @@ const styles = {
     fontFamily: "'Times New Roman', Times, serif",
     marginTop: 8,
     letterSpacing: '0.05em',
+  },
+  link: {
+    color: '#C9A558',
+    fontSize: 12,
+    letterSpacing: '0.07em',
+    textDecoration: 'underline',
   },
 };

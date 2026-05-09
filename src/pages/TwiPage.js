@@ -4,18 +4,58 @@ import { twiCategories } from '../data/twiPhrases';
 export default function TwiPage() {
   const [activeTab, setActiveTab] = useState(twiCategories[0].id);
   const [playingId, setPlayingId] = useState(null);
+  const [audioPlayer, setAudioPlayer] = useState(null);
 
   const current = twiCategories.find(c => c.id === activeTab);
 
+  function normalizeAudioFilename(text) {
+    return String(text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
   function handleListen(phrase) {
-    if (!window.speechSynthesis) return;
+    const explicitPath = phrase.audio;
+    const fallbackPath = `/audio/twi/${normalizeAudioFilename(phrase.twi)}.m4a`;
+    const source = explicitPath || fallbackPath;
+
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+    }
+    window.speechSynthesis?.cancel();
     setPlayingId(phrase.twi);
-    const utter = new window.SpeechSynthesisUtterance(phrase.twi);
-    utter.lang = 'en-GH';
-    utter.rate = 0.85;
-    utter.onend = () => setPlayingId(null);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
+
+    const player = new Audio(source);
+    setAudioPlayer(player);
+
+    player.onended = () => setPlayingId(null);
+    player.onerror = () => {
+      if (!window.speechSynthesis) {
+        setPlayingId(null);
+        return;
+      }
+      const utter = new window.SpeechSynthesisUtterance(phrase.twi);
+      utter.lang = 'en-GH';
+      utter.rate = 0.85;
+      utter.onend = () => setPlayingId(null);
+      window.speechSynthesis.speak(utter);
+    };
+
+    player.play().catch(() => {
+      if (!window.speechSynthesis) {
+        setPlayingId(null);
+        return;
+      }
+      const utter = new window.SpeechSynthesisUtterance(phrase.twi);
+      utter.lang = 'en-GH';
+      utter.rate = 0.85;
+      utter.onend = () => setPlayingId(null);
+      window.speechSynthesis.speak(utter);
+    });
   }
 
   return (
@@ -84,7 +124,7 @@ export default function TwiPage() {
               {/* Listen button */}
               <button
                 onClick={() => handleListen(phrase)}
-                title="Listen (browser TTS)"
+                title="Listen (recording, or TTS if missing)"
                 style={{
                   background: playingId === phrase.twi ? 'rgba(201,165,88,0.2)' : 'transparent',
                   border: '1px solid rgba(201,165,88,0.25)', color: '#C9A558',
@@ -103,7 +143,8 @@ export default function TwiPage() {
         <div style={{ textAlign: 'center', marginTop: 48, padding: '24px', background: 'rgba(201,165,88,0.03)', border: '1px solid rgba(201,165,88,0.1)', borderRadius: 10 }}>
           <div style={{ fontSize: 28, marginBottom: 10 }}>📖</div>
           <p style={{ color: '#7C5F48', fontStyle: 'italic', fontSize: 16, lineHeight: 1.8, margin: 0 }}>
-            The ▶ buttons use your browser's text-to-speech to approximate pronunciation.
+            The ▶ buttons will play recorded Twi audio from <strong style={{ color: '#BA9D7C' }}>/public/audio/twi/</strong> when available.
+            If a recording is missing, they fall back to your browser's text-to-speech.
             For authentic Twi audio, we recommend the <strong style={{ color: '#BA9D7C' }}>Duolingo Twi course</strong> or{' '}
             <strong style={{ color: '#BA9D7C' }}>LearnAkan.com</strong> for deeper study.
           </p>

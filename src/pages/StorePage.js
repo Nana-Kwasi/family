@@ -1,25 +1,26 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { products } from '../data/products';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { products, STORE_BUNDLE_SETS } from '../data/products';
 import ProductCard from '../components/ProductCard';
-import HeroBanner from '../components/HeroBanner';
-
-const heroOptions = [
-  { heading: 'Meaningful Gifts for Mothers', sub: 'Classy mugs, shirts, and keepsakes created to honor her love, strength, and sacrifice.' },
-  { heading: 'Mother\'s Day, Beautifully Gifted', sub: 'Elegant merchandise designed with gratitude, warmth, and timeless style.' },
-  { heading: 'For the Woman Who Gave So Much', sub: 'Shop meaningful gifts that celebrate a mother\'s quiet strength, care, and devotion.' },
-  { heading: 'The Mother\'s Day Collection', sub: 'Sentimental, stylish, and memorable gifts made to honor motherhood beautifully.' },
-];
+import { buildTrackedExternalUrl } from '../utils/commerceLinks';
+import { trackEvent } from '../utils/analytics';
+import { getOfficialPurchaseTarget } from '../utils/storefront';
 
 const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies'];
 
+/** Product ids shown on the store hero (right column), same line as signature bundles. */
+const STORE_HERO_IMAGE_IDS = [17, 19, 18];
 
 export default function StorePage() {
-  const [heroIdx] = useState(() => Math.floor(Math.random() * heroOptions.length));
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
-  const hero = heroOptions[heroIdx];
+  const [sortBy, setSortBy] = useState('featured');
 
-  const filtered = products.filter(p => {
+  useEffect(() => {
+    trackEvent('view_store', { filter: activeFilter, sort: sortBy });
+  }, [activeFilter, sortBy]);
+
+  const filtered = products.filter((p) => {
     if (activeFilter === 'All') return true;
     if (activeFilter === 'Mugs') return p.type === 'mug';
     if (activeFilter === 'T-Shirts') return p.type === 'tshirt';
@@ -27,94 +28,401 @@ export default function StorePage() {
     return true;
   });
 
+  const arranged = useMemo(() => {
+    const list = [...filtered];
+    if (sortBy === 'price_asc') list.sort((a, b) => a.price - b.price);
+    if (sortBy === 'price_desc') list.sort((a, b) => b.price - a.price);
+    if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === 'featured') list.sort((a, b) => a.id - b.id);
+    return list;
+  }, [filtered, sortBy]);
+
+  const spotlight = arranged[0];
+  const rest = arranged.slice(1);
+
+  function openExternalBuy(product) {
+    const { url: targetUrl } = getOfficialPurchaseTarget(product);
+    if (!targetUrl) return;
+    const trackedUrl = buildTrackedExternalUrl(targetUrl, {
+      campaign: 'store_spotlight_buy',
+      content: `spotlight_${product.id}`,
+    });
+    trackEvent('click_buy_external', {
+      location: 'store_spotlight',
+      product_id: product.id,
+      product_name: product.name,
+    });
+    window.open(trackedUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  const bundles = useMemo(
+    () =>
+      STORE_BUNDLE_SETS.map((b) => ({
+        id: b.id,
+        title: b.title,
+        subtitle: b.subtitle,
+        desc: b.desc,
+        items: b.productIds.map((id) => products.find((p) => p.id === id)).filter(Boolean),
+      })),
+    [],
+  );
+
+  const heroShowcaseProducts = useMemo(
+    () => STORE_HERO_IMAGE_IDS.map((id) => products.find((p) => p.id === id)).filter(Boolean),
+    [],
+  );
+
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper store-shell" style={{ background: '#F3F1EC' }}>
+      <section className="store-hero-wrap" style={{ padding: '38px 20px 26px', background: 'linear-gradient(180deg, rgba(158, 116, 40, 0.22) 0%, rgba(243, 241, 236, 0) 72%)' }}>
+        <div className="store-hero-card" style={{
+          width: '100%',
+          borderRadius: 18,
+          border: '1px solid rgba(255, 255, 255, 0.22)',
+          background: 'linear-gradient(145deg, #c4963e 0%, #b88932 40%, #9a7224 100%)',
+          boxShadow: '0 14px 40px rgba(55, 38, 10, 0.28)',
+          padding: '42px 28px',
+        }}>
+          <div className="store-hero-card-inner">
+            <div>
+              <p style={{ color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.35)', fontFamily: "'Montserrat', sans-serif", textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.18em', marginBottom: 14 }}>
+                Afia Premium Store
+              </p>
+              <h1 style={{ color: '#FFFFFF', textShadow: '0 2px 6px rgba(0,0,0,0.35)', fontFamily: "'Playfair Display', serif", fontSize: 'clamp(30px, 4vw, 46px)', lineHeight: 1.2, marginBottom: 12 }}>
+                Curated gifts with a warm, heritage feel
+              </h1>
+              <p style={{ color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.3)', fontFamily: "'Montserrat', sans-serif", fontSize: 16, lineHeight: 1.7, maxWidth: 560 }}>
+                Neutral grounds and gold accents so product photography stays true. Thoughtfully grouped for calm browsing and confident checkout.
+              </p>
+            </div>
+            {heroShowcaseProducts.length > 0 && (
+              <div className="store-hero-visual">
+                {heroShowcaseProducts.slice(0, 2).map((p) => (
+                  <div key={p.id} className="store-hero-visual__cell">
+                    <img src={p.image} alt={p.name} />
+                  </div>
+                ))}
+                {heroShowcaseProducts[2] && (
+                  <div className="store-hero-visual__cell store-hero-visual__cell--wide">
+                    <img src={heroShowcaseProducts[2].image} alt={heroShowcaseProducts[2].name} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
-      {/* ── Hero Banner ──────────────────────────────────────── */}
-      <HeroBanner
-        eyebrow="AFIA · Mama Africa · Gift Collection"
-        heading={hero.heading}
-        subheading={hero.sub}
-        smallText="Thoughtful Mother's Day gifting  ·  Gift-ready designs  ·  Made to be cherished"
-        imageSrc="/images/hoodie1.png"
-        imageAlt="Mama Africa Gift Collection"
-        ctaPrimary={{ label: "Shop Mother's Day", action: () => setActiveFilter('All') }}
-        ctaSecondary={{ label: 'Explore Gifts', action: () => setActiveFilter('Mugs') }}
-      />
+      <section className="store-controls-wrap" style={{ padding: '0 20px 18px' }}>
+        <div style={{
+          width: '100%',
+          marginBottom: 14,
+          border: '1px solid rgba(201,165,76,0.35)',
+          borderRadius: 10,
+          background: '#FAF9F7',
+          padding: '10px 14px',
+          color: '#4a4a4a',
+          fontFamily: "'Montserrat', sans-serif",
+          fontSize: 12,
+          letterSpacing: '0.04em',
+        }}>
+          Secure checkout partner • Premium print quality • Delivery tracking after purchase
+          {' '}
+          <Link to="/shipping-returns" style={{ color: '#8B6914', textDecoration: 'underline' }}>Shipping & Returns</Link>
+        </div>
+        <div style={{ width: '100%', marginBottom: 12, border: '1px solid rgba(201,165,76,0.28)', borderRadius: 999, background: '#EFEDE8', padding: '7px 12px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ color: '#6B5420', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif" }}>Legal & Trust</span>
+          <Link to="/privacy-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Privacy</Link>
+          <Link to="/terms" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Terms</Link>
+          <Link to="/cookie-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Cookies</Link>
+        </div>
+        <div className="store-controls-row" style={{
+          width: '100%',
+          display: 'flex',
+          gap: 10,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div className="store-filter-group" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {categories.map((cat) => (
+              <button
+                className={`store-filter-btn ${activeFilter === cat ? 'active' : ''}`}
+                key={cat}
+                onClick={() => setActiveFilter(cat)}
+                style={{
+                  background: activeFilter === cat ? '#E5C07B' : 'transparent',
+                  color: activeFilter === cat ? '#111111' : '#6F6F6F',
+                  border: activeFilter === cat ? '1px solid #E5C07B' : '1px solid #B8B8B8',
+                  padding: '10px 16px',
+                  borderRadius: 999,
+                  fontFamily: "'Montserrat', sans-serif",
+                  letterSpacing: '0.08em',
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <select
+            className="store-sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              background: '#FAF9F7',
+              color: '#1a1a1a',
+              border: '1px solid rgba(0,0,0,0.12)',
+              borderRadius: 8,
+              padding: '10px 12px',
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 13,
+            }}
+          >
+            <option value="featured">Featured</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="name">Name</option>
+          </select>
+        </div>
+      </section>
 
-      {/* ── Promo Banner ─────────────────────────────────────── */}
-      <section style={{
-        background: 'linear-gradient(135deg, rgba(201,165,88,0.12) 0%, rgba(180,100,40,0.08) 50%, rgba(201,165,88,0.12) 100%)',
-        borderTop: '1px solid rgba(201,165,88,0.2)',
-        borderBottom: '1px solid rgba(201,165,88,0.2)',
-        padding: '28px 20px',
-        textAlign: 'center',
-      }}>
-        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: '0.28em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
-          Limited Collection
-        </p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(20px, 4vw, 30px)', color: '#EDD9BC', fontWeight: 600, marginBottom: 8 }}>
-          For the Woman Who Gave So Much
-        </h2>
-        <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 16, color: '#BA9D7C', fontStyle: 'italic', marginBottom: 16 }}>
-          Thoughtful Mother's Day gifting &nbsp;·&nbsp; Gift-ready designs &nbsp;·&nbsp; Made to be cherished
-        </p>
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {['Mugs', 'Tees', 'Hoodies', 'Bundles'].map(tag => (
-            <span key={tag} style={{
-              fontFamily: "'Montserrat', sans-serif", fontSize: 11,
-              color: '#C9A558', border: '1px solid rgba(201,165,88,0.35)',
-              borderRadius: 50, padding: '4px 14px', letterSpacing: '0.08em',
-            }}>{tag}</span>
+      <section style={{ padding: '0 20px 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+          {[
+            { title: 'Delivery Window', text: 'US 3-8 business days · EU 5-12 business days after production.' },
+            { title: 'Return SLA', text: 'Report damaged/incorrect items within 7 days for fast replacement review.' },
+            { title: 'Support', text: 'Mamaafricaafia@gmail.com for shipping and order support.' },
+          ].map((item) => (
+            <div key={item.title} style={{ border: '1px solid rgba(201,165,76,0.3)', borderRadius: 10, background: '#FAF9F7', padding: 12 }}>
+              <p style={{ margin: '0 0 6px', color: '#8B6914', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{item.title}</p>
+              <p style={{ margin: 0, color: '#5a5a5a', fontSize: 13, lineHeight: 1.6 }}>{item.text}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ── Category Filters ─────────────────────────────────── */}
-      <section style={{ padding: '32px 20px 0', textAlign: 'center' }}>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '9px 20px', borderRadius: 50, cursor: 'pointer',
-                transition: 'all 0.2s',
-                background: activeFilter === cat ? 'linear-gradient(135deg, #C9A558, #E8CB82)' : 'transparent',
-                color: activeFilter === cat ? '#1C0E04' : '#BA9D7C',
-                border: activeFilter === cat ? '1px solid #C9A558' : '1px solid rgba(201,165,88,0.3)',
-                fontWeight: activeFilter === cat ? 600 : 400,
+      <section className="store-spotlight-wrap" style={{ padding: '0 20px 24px' }}>
+        <div style={{ width: '100%' }}>
+          {spotlight && (
+            <div className="store-spotlight-card" style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(260px, 1fr) minmax(300px, 1.2fr)',
+              gap: 0,
+              border: '1px solid rgba(26,26,26,0.1)',
+              borderRadius: 16,
+              overflow: 'hidden',
+              background: '#FAF9F7',
+              boxShadow: '0 10px 28px rgba(0,0,0,0.07)',
+            }}>
+              <div style={{
+                minHeight: 300,
+                background: '#E8E6E2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 16,
               }}
-            >
-              {cat}
-            </button>
+              >
+                <img
+                  src={spotlight.image}
+                  alt={spotlight.name}
+                  style={{ maxWidth: '100%', maxHeight: 420, width: 'auto', height: 'auto', objectFit: 'contain' }}
+                />
+              </div>
+              <div className="store-spotlight-content" style={{ padding: 24, borderLeft: '1px solid rgba(0,0,0,0.06)' }}>
+                <p style={{ color: '#8B6914', fontFamily: "'Montserrat', sans-serif", textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.12em', marginBottom: 8 }}>
+                  Spotlight product
+                </p>
+                <h2 style={{ color: '#1a1a1a', fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 3vw, 34px)', marginBottom: 10 }}>
+                  {spotlight.name}
+                </h2>
+                <p style={{ color: '#5a5a5a', fontFamily: "'Montserrat', sans-serif", fontSize: 15, lineHeight: 1.7, marginBottom: 16 }}>
+                  {spotlight.description}
+                </p>
+                <p style={{ color: '#8B6914', fontFamily: "'Montserrat', sans-serif", fontSize: 30, fontWeight: 700, marginBottom: 16 }}>
+                  ${spotlight.price}
+                </p>
+                <button
+                  type="button"
+                  className="store-btn-primary"
+                  style={{
+                    width: '100%',
+                    fontSize: 12,
+                    background: 'var(--store-gold-cta, #E5C07B)',
+                    color: '#111111',
+                    border: '1px solid var(--store-gold-cta, #E5C07B)',
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                    fontFamily: "'Montserrat', sans-serif",
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => openExternalBuy(spotlight)}
+                >
+                  Buy now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/product/${spotlight.id}`)}
+                  style={{
+                    marginTop: 10,
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#8B6914',
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontSize: 12,
+                    letterSpacing: '0.06em',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Product details
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section style={{ padding: '0 20px 24px' }}>
+        <div style={{ width: '100%', marginBottom: 12 }}>
+          <p style={{ color: '#8A6B2D', fontFamily: "'Montserrat', sans-serif", textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.14em', marginBottom: 8 }}>
+            Signature Bundles
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+          {bundles.map((bundle) => {
+            const lead = bundle.items[0];
+            if (!lead) return null;
+            return (
+              <article
+                key={bundle.id}
+                className="store-bundle-card"
+                style={{ border: '1px solid rgba(26,26,26,0.08)', borderRadius: 12, background: '#FAF9F7', padding: 14, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}
+              >
+                <div
+                  className="store-bundle-thumbs"
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  {bundle.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="store-bundle-thumb-well"
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        aspectRatio: '1 / 1',
+                        background: '#E8E6E2',
+                        borderRadius: 10,
+                        border: '1px solid rgba(0,0,0,0.06)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 8,
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        decoding="async"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          width: 'auto',
+                          height: 'auto',
+                          objectFit: 'contain',
+                          display: 'block',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  to={`/bundle/${bundle.id}`}
+                  className="store-bundle-card-hit"
+                  style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
+                  aria-labelledby={`bundle-title-${bundle.id}`}
+                >
+                  <p style={{ color: '#8B6914', fontFamily: "'Cinzel', serif", letterSpacing: '0.08em', fontSize: 12, textTransform: 'uppercase', marginBottom: 6 }}>
+                    {bundle.subtitle}
+                  </p>
+                  <h3 id={`bundle-title-${bundle.id}`} style={{ color: '#1a1a1a', fontFamily: "'Playfair Display', serif", fontSize: 22, marginBottom: 8 }}>
+                    {bundle.title}
+                  </h3>
+                  <p style={{ color: '#5a5a5a', fontSize: 14, lineHeight: 1.6, marginBottom: 12 }}>
+                    {bundle.desc}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    {bundle.items.map((item) => (
+                      <span key={item.id} style={{ fontSize: 11, color: '#5c4510', border: '1px solid rgba(201,165,76,0.35)', background: 'rgba(229,192,123,0.12)', borderRadius: 999, padding: '3px 10px' }}>
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+                <button
+                  type="button"
+                  className="store-btn-primary store-bundle-card__buy"
+                  onClick={() => {
+                    openExternalBuy(lead);
+                    trackEvent('click_bundle_buy', { bundle_id: bundle.id, product_id: lead.id });
+                  }}
+                >
+                  Buy set (official checkout)
+                </button>
+                <Link to={`/bundle/${bundle.id}`} className="store-bundle-card__view-set">
+                  View full set
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section style={{ padding: '0 20px 26px' }}>
+        <div style={{ width: '100%' }}>
+          <p style={{ color: '#8A6B2D', fontFamily: "'Montserrat', sans-serif", textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.14em', marginBottom: 8 }}>
+            Buyer Proof
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+          {[
+            { n: 'Ama, London', t: '“Quality felt premium and delivery updates were clear from start to finish.”' },
+            { n: 'Esi, New York', t: '“The gift looked even better in person. My mother loved it immediately.”' },
+            { n: 'Kojo, Berlin', t: '“Fast support response and smooth replacement handling. Very trustworthy.”' },
+          ].map((r) => (
+            <div key={r.n} style={{ border: '1px solid rgba(201,165,76,0.28)', borderRadius: 10, background: '#FAF9F7', padding: 12 }}>
+              <p style={{ margin: '0 0 8px', color: '#4a4a4a', fontSize: 14, lineHeight: 1.7 }}>{r.t}</p>
+              <p style={{ margin: 0, color: '#8B6914', fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{r.n}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ── Product Grid ─────────────────────────────────────── */}
-      <section style={{ padding: '32px 0 56px' }}>
-        {filtered.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#7C5F48', fontStyle: 'italic', padding: '40px 20px' }}>
-            More {activeFilter} coming soon — stay tuned.
+      <section className="store-grid-wrap" style={{ padding: '0 0 64px', background: 'linear-gradient(180deg, rgba(243,241,236,0) 0%, rgba(138,107,45,0.06) 100%)' }}>
+        {arranged.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#6a6a6a', fontStyle: 'italic', padding: '40px 20px' }}>
+            More {activeFilter} coming soon.
           </p>
         ) : (
-          <div className="product-grid">
-            {filtered.map(p => <ProductCard key={p.id} product={p} />)}
+          <div className="product-grid store-product-grid" style={{ width: '100%', maxWidth: 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            {(rest.length ? rest : arranged).map((p, idx) => <ProductCard key={p.id} product={p} animationIndex={idx} />)}
           </div>
         )}
       </section>
-
-      {/* ── Continue Shopping nudge ───────────────────────────── */}
-      <section style={{ padding: '40px 20px 72px', textAlign: 'center' }}>
-        <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: 17, color: '#7C5F48', fontStyle: 'italic' }}>
-          More pieces coming soon — stay tuned &nbsp;·&nbsp;{' '}
-          <Link to="/" style={{ color: '#C9A558' }}>Back to home</Link>
-        </p>
-      </section>
-
     </div>
   );
 }

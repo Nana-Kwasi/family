@@ -49,12 +49,41 @@ function StoryModal({ story, onClose }) {
   }, []);
 
   useEffect(() => {
+    if (!story?.id) {
+      setReviews([]);
+      return undefined;
+    }
+
     const q = query(
       collection(db, 'diasporaReviews'),
       where('storyId', '==', story.id),
       orderBy('createdAt', 'desc'),
     );
-    return onSnapshot(q, snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      (snap) => setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      () => {
+        // Fallback: avoid hard runtime crash if Firestore watch target fails in dev/runtime.
+        const fallbackQ = query(
+          collection(db, 'diasporaReviews'),
+          where('storyId', '==', story.id),
+        );
+        onSnapshot(
+          fallbackQ,
+          (fallbackSnap) => {
+            const sorted = fallbackSnap.docs
+              .map((d) => ({ id: d.id, ...d.data() }))
+              .sort((a, b) => {
+                const ta = a.createdAt?.toMillis?.() ?? 0;
+                const tb = b.createdAt?.toMillis?.() ?? 0;
+                return tb - ta;
+              });
+            setReviews(sorted);
+          },
+          () => setReviews([]),
+        );
+      },
+    );
   }, [story.id]);
 
   const avgRating = reviews.length
@@ -281,7 +310,11 @@ export default function DiasporaPage() {
 
   useEffect(() => {
     const q = query(collection(db, 'diasporaStories'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, snap => setStories(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      (snap) => setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      () => setStories([]),
+    );
   }, []);
 
   async function handleSubmit(e) {

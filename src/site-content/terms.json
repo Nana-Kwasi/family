@@ -1,0 +1,36 @@
+{
+  "title": "Terms of Service",
+  "intro": "Use of this site means you agree to these terms.",
+  "sections": [
+    {
+      "heading": "Use of Site",
+      "paragraphs": [
+        "You agree to use this site lawfully and not to interfere with operations, content, or user experience."
+      ]
+    },
+    {
+      "heading": "Access & Accounts",
+      "paragraphs": [
+        "This site does not provide customer account registration. Administrative access is restricted to Mama Africa only."
+      ]
+    },
+    {
+      "heading": "Orders & Fulfillment",
+      "paragraphs": [
+        "Orders are fulfilled via trusted external checkout partners. Pricing, fulfillment timelines, and delivery are subject to partner availability and logistics constraints."
+      ]
+    },
+    {
+      "heading": "Intellectual Property",
+      "paragraphs": [
+        "All brand assets, stories, and design elements are protected and may not be copied or reused without permission."
+      ]
+    },
+    {
+      "heading": "Contact",
+      "paragraphs": [
+        "Questions: Mamaafricaafia@gmail.com"
+      ]
+    }
+  ]
+}
