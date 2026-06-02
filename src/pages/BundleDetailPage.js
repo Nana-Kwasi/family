@@ -60,7 +60,6 @@ export default function BundleDetailPage() {
   }
 
   const lead = bundle.items[0];
-  const totalPrice = bundle.items.reduce((s, p) => s + p.price, 0);
   const bundleIdSet = new Set(bundle.items.map((p) => p.id));
   const related = products.filter((p) => !bundleIdSet.has(p.id)).slice(0, 3);
   const mergedPerfectFor = [...new Set(bundle.items.flatMap((p) => p.perfectFor || []))].slice(0, 6);
@@ -280,12 +279,6 @@ export default function BundleDetailPage() {
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 38px)', color: '#1a1a1a', fontWeight: 700, lineHeight: 1.2, marginBottom: 12 }}>
               {bundle.title}
             </h1>
-            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 34, color: '#8B6914', letterSpacing: '0.02em', fontWeight: 700, marginBottom: 8 }}>
-              ${totalPrice}
-            </div>
-            <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 13, color: '#6a6a6a', marginBottom: 16, lineHeight: 1.5 }}>
-              Combined value for this curated set. Each piece is listed below with its own price and checkout.
-            </p>
             <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 16, color: '#5a5a5a', lineHeight: 1.8, marginBottom: 24 }}>
               {bundle.desc}
             </p>
@@ -301,7 +294,6 @@ export default function BundleDetailPage() {
                     <Link to={`/product/${item.id}`} style={{ color: '#1a1a1a', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2 }}>
                       {item.name}
                     </Link>
-                    <span style={{ color: '#8B6914', fontWeight: 700, marginLeft: 'auto' }}>${item.price}</span>
                   </li>
                 ))}
               </ul>
@@ -442,9 +434,6 @@ export default function BundleDetailPage() {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5F48' }}>
               Gift set · {bundle.subtitle}
-            </div>
-            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 20, fontWeight: 700, color: '#111111' }}>
-              ${totalPrice}
             </div>
           </div>
           <button

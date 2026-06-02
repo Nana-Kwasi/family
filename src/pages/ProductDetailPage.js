@@ -13,8 +13,11 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
   const { url: targetUrl } = product ? getOfficialPurchaseTarget(product) : { url: '' };
   const buyLabel = 'Buy now';
+  const galleryImages = product?.images || (product ? [product.image] : []);
+  const currentImage = galleryImages[activeImgIdx] || (product?.image ?? '');
 
   useEffect(() => {
     if (!product) return;
@@ -79,8 +82,18 @@ export default function ProductDetailPage() {
     );
   }
 
-  const needsSize = product.sizes && product.sizes.length > 0 && !['11oz', '15oz'].includes(product.sizes[0]);
-  const related = products.filter(p => p.type === product.type && p.id !== product.id).slice(0, 3);
+  const needsSize = product.sizes && product.sizes.length > 0 && !['11oz', '15oz'].includes(product.sizes[0]) && !['0–3M', '3–6M'].includes(product.sizes[0]);
+
+  // Prefer same day-born (any type), then fall back to same type
+  const sameDayRelated = product.bornDay
+    ? products.filter(p => p.bornDay === product.bornDay && p.id !== product.id)
+    : [];
+  const related = sameDayRelated.length >= 3
+    ? sameDayRelated.slice(0, 4)
+    : [
+        ...sameDayRelated,
+        ...products.filter(p => p.type === product.type && p.id !== product.id && !sameDayRelated.includes(p)),
+      ].slice(0, 4);
 
   return (
     <div className="page-wrapper store-shell store-detail-page" style={{ background: '#F3F1EC' }}>
@@ -132,7 +145,7 @@ export default function ProductDetailPage() {
             ×
           </button>
           <img
-            src={product.image}
+            src={currentImage}
             alt={product.name}
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -194,7 +207,7 @@ export default function ProductDetailPage() {
                   boxSizing: 'border-box',
                 }}>
                   <img
-                    src={product.image}
+                    src={currentImage}
                     alt={product.name}
                     style={{
                       position: 'absolute',
@@ -229,6 +242,49 @@ export default function ProductDetailPage() {
             }}>
               Tap photo to view full screen
             </p>
+
+            {/* Thumbnail strip — only shown when product has multiple images */}
+            {galleryImages.length > 1 && (
+              <div style={{
+                display: 'flex',
+                gap: 8,
+                marginTop: 12,
+                overflowX: 'auto',
+                paddingBottom: 4,
+                WebkitOverflowScrolling: 'touch',
+              }}>
+                {galleryImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImgIdx(idx)}
+                    aria-label={`View image ${idx + 1}`}
+                    style={{
+                      flexShrink: 0,
+                      width: 68,
+                      height: 68,
+                      padding: 3,
+                      borderRadius: 8,
+                      border: activeImgIdx === idx
+                        ? '2px solid #C9A54C'
+                        : '1px solid rgba(0,0,0,0.12)',
+                      background: activeImgIdx === idx ? '#FFF8EC' : '#E8E6E2',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box',
+                      boxShadow: activeImgIdx === idx ? '0 2px 8px rgba(201,165,76,0.35)' : 'none',
+                      transition: 'border-color 0.15s, box-shadow 0.15s',
+                    }}
+                  >
+                    <img
+                      src={img}
+                      alt={`Variant ${idx + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 5, display: 'block' }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="store-detail-info-card" style={{
@@ -246,9 +302,6 @@ export default function ProductDetailPage() {
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 38px)', color: '#1a1a1a', fontWeight: 700, lineHeight: 1.2, marginBottom: 12 }}>
               {product.name}
             </h1>
-            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 34, color: '#8B6914', letterSpacing: '0.02em', fontWeight: 700, marginBottom: 16 }}>
-              ${product.price}
-            </div>
             <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 16, color: '#5a5a5a', lineHeight: 1.8, marginBottom: 24 }}>
               {product.description}
             </p>
@@ -474,9 +527,6 @@ export default function ProductDetailPage() {
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5F48' }}>
               {needsSize ? (selectedSize ? `Size: ${selectedSize}` : 'Select Size to Continue') : 'Ready to Checkout'}
             </div>
-            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 20, fontWeight: 700, color: '#111111' }}>
-              ${product.price}
-            </div>
           </div>
           <button
             className="store-btn-primary"
@@ -506,10 +556,10 @@ export default function ProductDetailPage() {
         <section className="store-related-wrap" style={{ borderTop: '1px solid rgba(201,165,76,0.22)', padding: '56px 28px 80px', background: 'linear-gradient(180deg, rgba(243,241,236,0) 0%, rgba(138,107,45,0.06) 100%)' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.2em', color: '#8A6B2D', textTransform: 'uppercase', marginBottom: 8 }}>
-              You May Also Like
+              {product.bornDay ? `More ${product.bornDay}-Born Gifts` : 'You May Also Like'}
             </p>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(20px, 4vw, 28px)', color: '#1A1A1A' }}>
-              More Thoughtful Gifts
+              {product.bornDay ? `Complete the ${product.bornDay}-Born Collection` : 'More Thoughtful Gifts'}
             </h2>
           </div>
           <div className="product-grid store-product-grid" style={{ width: '100%', maxWidth: 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>

@@ -393,7 +393,7 @@ async function generateHeritageCertificate(name, day, dateDisplay, gender, data)
   ctx.fillText(`${String(day).toUpperCase()} DAY-BORN LINEAGE`, contentMid, y);
   y += 28;
   ctx.font = '600 15px Arial, Helvetica, sans-serif';
-  ctx.fillText('CERTIFICATE OF AKAN HERITAGE', contentMid, y);
+  ctx.fillText('CULTURAL IDENTITY CERTIFICATE', contentMid, y);
   y += 32;
   if (imgDivide) y += drawDividerStrip(ctx, imgDivide, contentMid, y, contentRight - contentLeft) + 22;
   else y += 28;
@@ -614,13 +614,21 @@ async function generateNamingCertificate(name, day, dateDisplay, gender, data, b
   let y = innerY + 190;
 
   ctx.fillStyle = titleBrown;
-  ctx.font = '600 42px Cinzel, Palatino, serif';
-  ctx.fillText('GHANAIAN NAMING CEREMONY', cx, y);
-  y += 18;
-  if (imgDivide) y += drawDividerStrip(ctx, imgDivide, cx, y, 520) + 52;
-  else y += 46;
+  ctx.font = '400 11px "Times New Roman", Times, serif';
+  ctx.fillText('MAMA AFRICA OFFICIAL · GHANA', cx, y);
+  y += 30;
+  ctx.font = '600 30px Cinzel, Palatino, serif';
+  ctx.fillStyle = nameGreen;
+  ctx.fillText('CULTURAL IDENTITY CERTIFICATE', cx, y);
+  y += 24;
+  ctx.font = 'italic 400 15px "EB Garamond", Garamond, serif';
+  ctx.fillStyle = titleBrown;
+  ctx.fillText('Akan Heritage & Ghanaian Naming Tradition', cx, y);
+  y += 16;
+  if (imgDivide) y += drawDividerStrip(ctx, imgDivide, cx, y, 520) + 44;
+  else y += 44;
 
-  ctx.font = 'italic 400 40px "EB Garamond", Garamond, serif';
+  ctx.font = 'italic 400 38px "EB Garamond", Garamond, serif';
   ctx.fillStyle = ink;
   ctx.fillText('This is to certify that', cx, y);
   y += 74;
@@ -677,9 +685,9 @@ async function generateNamingCertificate(name, day, dateDisplay, gender, data, b
   y += 10;
 
   const footLabelY = H - margin - 110;
-  const symSize = 96;
+  const symSize = 48;
   if (imgAdinkra?.width) {
-    drawFittedImage(ctx, imgAdinkra, cx - symSize / 2, footLabelY - symSize - 14, symSize, symSize);
+    drawFittedImage(ctx, imgAdinkra, cx - symSize / 2, footLabelY - symSize - 10, symSize, symSize);
   }
 
   ctx.textAlign = 'left';

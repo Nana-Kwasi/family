@@ -10,7 +10,10 @@ import { drumsCallHomeStories } from '../data/drumsCallHomeStories';
 import { products } from '../data/products';
 import { trackEvent } from '../utils/analytics';
 import { HeritageLongformBlocks } from '../components/HeritageLongformEssay';
+import ModalShell from '../components/ui/ModalShell';
+import FinishReadingGate from '../components/ui/FinishReadingGate';
 import { meaningOfMourningMeta, meaningOfMourningBlocks } from '../data/meaningOfMourningStory';
+import useSEO from '../hooks/useSEO';
 import { traditionalMarriageMeta, traditionalMarriageBlocks } from '../data/traditionalMarriageStory';
 
 const HERITAGE_ESSAY_SHELF = [
@@ -167,7 +170,11 @@ function StoryFeedbackSection({ story }) {
       where('storyId', '==', story.id),
       orderBy('createdAt', 'desc')
     );
-    return onSnapshot(q, snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {},
+    );
   }, [story?.id]);
 
   async function handleSubmit(e) {
@@ -291,7 +298,11 @@ function BookModal({ onClose }) {
 
   useEffect(() => {
     const q = query(collection(db, 'bookReviews'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {},
+    );
   }, []);
 
   // Record read once per session
@@ -301,13 +312,6 @@ function BookModal({ onClose }) {
       addDoc(collection(db, 'bookReads'), { readAt: serverTimestamp() }).catch(() => {});
     }
   }, []);
-
-  // Close on Escape
-  useEffect(() => {
-    const handler = e => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
 
   function goTo(id) {
     setActiveSection(id);
@@ -346,10 +350,7 @@ function BookModal({ onClose }) {
   const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '0', overflowY: 'auto' }}
-      onClick={onClose}>
-      <div style={{ background: '#0d0a02', width: '100%', maxWidth: 1000, margin: 'auto', display: 'flex', flexDirection: 'column', maxHeight: '100vh', position: 'relative' }}
-        onClick={e => e.stopPropagation()}>
+    <ModalShell open onClose={onClose} maxWidth={1000} label={bookMeta.title}>
 
         {/* Modal Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(201,165,88,0.15)', flexShrink: 0, flexWrap: 'wrap', gap: 10 }}>
@@ -462,7 +463,6 @@ function BookModal({ onClose }) {
             )}
           </div>
         </div>
-      </div>
 
       <style>{`
         @media (max-width: 640px) {
@@ -470,7 +470,7 @@ function BookModal({ onClose }) {
           .toc-toggle-btn { display: block !important; }
         }
       `}</style>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -604,13 +604,6 @@ function InspiredGiftsSection({ products, storyId, onPickProduct }) {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .story-inspired-gift-price {
-          color: #C9A558;
-          font-weight: 700;
-          font-size: 14px;
-          font-family: 'Cinzel', serif;
-          margin-top: auto;
-        }
       `}
       </style>
       <div className="story-inspired-gifts-wrap">
@@ -631,7 +624,6 @@ function InspiredGiftsSection({ products, storyId, onPickProduct }) {
               </div>
               <div className="story-inspired-gift-body">
                 <div className="story-inspired-gift-name">{p.name}</div>
-                <div className="story-inspired-gift-price">${p.price}</div>
               </div>
             </Link>
           ))}
@@ -652,22 +644,15 @@ function HeritageEssayReadModal({ entry, onClose }) {
   const feedbackStory = { id: meta.id, title: meta.title, type: 'story' };
 
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  useEffect(() => {
     trackEvent('open_heritage_essay_modal', { essay_id: meta.id, essay_title: meta.title });
   }, [meta.id, meta.title]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: 0, overflowY: 'auto' }} onClick={onClose} role="presentation">
-      <div style={{ background: '#0d0a02', width: '100%', maxWidth: 1000, margin: 'auto', display: 'flex', flexDirection: 'column', maxHeight: '100vh', position: 'relative' }} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="heritage-essay-modal-title">
+    <ModalShell open onClose={onClose} maxWidth={1000} label={meta.title}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(201,165,88,0.15)', flexShrink: 0, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '0.18em', color: '#9E7D42', textTransform: 'uppercase', marginBottom: 6 }}>{shelfMeta}</div>
-            <div id="heritage-essay-modal-title" style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(12px,2vw,15px)', color: '#C9A558', letterSpacing: '0.08em', lineHeight: 1.35 }}>{meta.title}</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(12px,2vw,15px)', color: '#C9A558', letterSpacing: '0.08em', lineHeight: 1.35 }}>{meta.title}</div>
             <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 12, color: '#7C5F48', fontStyle: 'italic', marginTop: 4 }}>{meta.subtitle}</div>
           </div>
           <button type="button" onClick={onClose} style={{ background: 'rgba(201,165,88,0.1)', border: '1px solid rgba(201,165,88,0.25)', color: '#C9A558', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', flexShrink: 0 }}>✕ Close</button>
@@ -675,12 +660,13 @@ function HeritageEssayReadModal({ entry, onClose }) {
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: 'clamp(20px,4vw,48px)' }}>
           <div style={{ maxWidth: 760, margin: '0 auto' }}>
             <HeritageLongformBlocks blocks={blocks} />
-            <StoryFeedbackSection story={feedbackStory} />
-            <InspiredGiftsSection products={suggestedProducts} storyId={meta.id} onPickProduct={onClose} />
+            <FinishReadingGate>
+              <StoryFeedbackSection story={feedbackStory} />
+              <InspiredGiftsSection products={suggestedProducts} storyId={meta.id} onPickProduct={onClose} />
+            </FinishReadingGate>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -754,12 +740,6 @@ function ChapterStoryModal({ story, onClose }) {
   const suggestedProducts = getStorySuggestedProducts(story);
 
   useEffect(() => {
-    const handler = e => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  useEffect(() => {
     trackEvent('open_story_modal', {
       story_id: story?.id || 'featured',
       story_title: story?.title || '',
@@ -772,8 +752,7 @@ function ChapterStoryModal({ story, onClose }) {
   }, [activeIndex]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: '0', overflowY: 'auto' }} onClick={onClose}>
-      <div style={{ background: '#0d0a02', width: '100%', maxWidth: 1000, margin: 'auto', display: 'flex', flexDirection: 'column', maxHeight: '100vh', position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <ModalShell open onClose={onClose} maxWidth={1000} label={story.title}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(201,165,88,0.15)', flexShrink: 0, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => setTocOpen(!tocOpen)}
@@ -870,24 +849,17 @@ function ChapterStoryModal({ story, onClose }) {
             )}
           </div>
         </div>
-      </div>
       <style>{`
         @media (max-width: 640px) {
           .book-toc-sidebar { display: none !important; }
           .toc-toggle-btn { display: block !important; }
         }
       `}</style>
-    </div>
+    </ModalShell>
   );
 }
 
 function StoryReadModal({ story, onClose }) {
-  useEffect(() => {
-    const handler = e => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
   const date = story.createdAt?.toDate?.() || (story.createdAt ? new Date(story.createdAt) : null);
   const suggestedProducts = getStorySuggestedProducts(story);
 
@@ -900,8 +872,7 @@ function StoryReadModal({ story, onClose }) {
   }, [story]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: 0, overflowY: 'auto' }} onClick={onClose}>
-      <div style={{ background: '#0d0a02', width: '100%', maxWidth: 920, margin: 'auto', display: 'flex', flexDirection: 'column', maxHeight: '100vh', position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <ModalShell open onClose={onClose} maxWidth={920} label={story.title}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(201,165,88,0.15)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.1em', color: '#C9A558' }}>
@@ -927,12 +898,13 @@ function StoryReadModal({ story, onClose }) {
             <p style={{ whiteSpace: 'pre-line', fontFamily: "'EB Garamond', Georgia, serif", fontSize: 'clamp(20px,2.5vw,24px)', lineHeight: 1.95, color: '#EDD9BC', fontStyle: story.type === 'proverb' ? 'italic' : 'normal' }}>
               {story.content}
             </p>
-            <StoryFeedbackSection story={story} />
-            <InspiredGiftsSection products={suggestedProducts} storyId={story?.id} onPickProduct={onClose} />
+            <FinishReadingGate>
+              <StoryFeedbackSection story={story} />
+              <InspiredGiftsSection products={suggestedProducts} storyId={story?.id} onPickProduct={onClose} />
+            </FinishReadingGate>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -961,7 +933,11 @@ function StoryCard({ story, onOpenRead }) {
       where('storyId', '==', story.id),
       orderBy('createdAt', 'desc')
     );
-    const unsub = onSnapshot(q, snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsub = onSnapshot(
+      q,
+      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {},
+    );
     return () => unsub();
   }, [story.id, showReviews]);
 
@@ -1145,6 +1121,12 @@ function StoryCard({ story, onOpenRead }) {
 // ── Main Stories Page ─────────────────────────────────────────────────────────
 
 export default function StoriesPage() {
+  useSEO({
+    title: 'Ghanaian Stories, Culture & Heritage — Outdooring (Aba Dinto)',
+    description: 'Read Ghanaian folktales, proverbs, and the full digital book "Outdooring (Aba Dinto)" about Akan naming traditions. Cultural education from Mama Africa Official Ghana.',
+    image: '/images/afia-hero.jpg',
+  });
+
   const [bookOpen, setBookOpen] = useState(false);
   const [chapterOpenStory, setChapterOpenStory] = useState(null);
   const [readOpenStory, setReadOpenStory] = useState(null);
@@ -1165,14 +1147,14 @@ export default function StoriesPage() {
 
   useEffect(() => {
     const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, snap => setAdminStories(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q,
+      snap => setAdminStories(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      () => {},
+    );
   }, []);
 
-  // Prevent body scroll when book modal open
-  useEffect(() => {
-    document.body.style.overflow = (bookOpen || chapterOpenStory || readOpenStory || heritageEssayKey) ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [bookOpen, chapterOpenStory, readOpenStory, heritageEssayKey]);
+  // Body scroll lock is handled inside ModalShell for each modal.
 
   const shelfChapterStories = useMemo(
     () => [...featuredDrums, ...adminStories.filter((s) => s.chapters && s.chapters.length > 0)],

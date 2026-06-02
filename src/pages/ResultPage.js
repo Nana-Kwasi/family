@@ -3,12 +3,14 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import dayBorns from '../data/akanDayBorns.json';
 import { products } from '../data/products';
-import ProductCard from '../components/ProductCard';
+import WhiteProductSection from '../components/ui/WhiteProductSection';
+import EmailCapture from '../components/ui/EmailCapture';
 import { generateCertificateDataUrl, CERT_VARIANTS } from '../utils/certificateCanvas';
+import useSEO from '../hooks/useSEO';
 
 const CERT_STYLE_SAMPLES = [
-  { variant: CERT_VARIANTS.NAMING_ADINKRA, src: '/images/cer-sample-2.png', title: 'Naming · Adinkra', subtitle: 'Parchment & lineage detail' },
-  { variant: CERT_VARIANTS.NAMING_KENTE, src: '/images/cert-sample-3.png', title: 'Naming · Kente', subtitle: 'Bold kente frame' },
+  { variant: CERT_VARIANTS.NAMING_ADINKRA, src: '/images/cer-sample-2.png', title: 'Naming · Adinkra', subtitle: 'Parchment & lineage detail', premium: false },
+  { variant: CERT_VARIANTS.NAMING_KENTE, src: '/images/cert-sample-3.png', title: 'Naming · Kente', subtitle: 'Bold kente frame · Premium', premium: true },
 ];
 
 function getDay(dateStr) {
@@ -105,6 +107,8 @@ export default function ResultPage() {
   const [certStepIndex, setCertStepIndex] = useState(-1);
   const [certVariant, setCertVariant] = useState(CERT_VARIANTS.NAMING_ADINKRA);
   const [showCertOptions, setShowCertOptions] = useState(false);
+  const [premiumUnlocked, setPremiumUnlocked] = useState(false);
+  const [showPremiumGate, setShowPremiumGate] = useState(false);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const shareMenuRef = useRef(null);
@@ -149,6 +153,16 @@ export default function ResultPage() {
     setCertError('');
   }, [dob, gender, certVariant]);
 
+  const name = dob && data ? (data[gender] || data.female) : null;
+
+  useSEO({
+    title: name ? `Your Akan Name is ${name} — ${day} Born` : 'Discover Your Akan Day Name',
+    description: name
+      ? `You were born on ${day}, making your Akan name ${name}. Discover your cultural heritage, soul path, and heritage gifts from Mama Africa Official Ghana.`
+      : 'Enter your birthday to discover your Ghanaian Akan day name and cultural identity.',
+    image: '/images/afia-hero.jpg',
+  });
+
   if (!dob) {
     return (
       <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
@@ -163,8 +177,6 @@ export default function ResultPage() {
   }
 
   if (!data) return null;
-
-  const name = data[gender] || data.female;
   const dateDisplay = new Date(dob + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const birthDate = new Date(dob + 'T12:00:00');
@@ -234,12 +246,48 @@ export default function ResultPage() {
       setShowCertOptions(true);
       return;
     }
+    if (certVariant === CERT_VARIANTS.NAMING_KENTE && !premiumUnlocked) {
+      setShowPremiumGate(true);
+      return;
+    }
+    setShowPremiumGate(false);
     await runCertificatePipeline();
   }
 
   async function handlePreviewCertificate() {
     const dataUrl = await ensureCertificateData();
     if (dataUrl) setCertPreviewOpen(true);
+  }
+
+  async function handleWhatsAppShare() {
+    const text = `My Akan day name is ${name} — I was born on a ${day}. ${data.planet}. Discover yours with Mama Africa Official!`;
+    const { url } = getShareUrl();
+
+    // If cert is ready, try native share with the image file (opens OS share sheet → user picks WhatsApp)
+    if (certDataUrl) {
+      try {
+        const blob = await fetch(certDataUrl).then((r) => r.blob());
+        const file = new File([blob], `${name}-cultural-identity-certificate.png`, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `My Akan Name is ${name}!`,
+            text: `${text}\n${url}`,
+          });
+          return;
+        }
+      } catch {
+        // native share failed or dismissed — fall through
+      }
+    }
+
+    // No cert ready or native share unsupported — open WhatsApp text share
+    const encodedText = encodeURIComponent(`${text} ${url}`);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank', 'noopener,noreferrer');
+
+    if (!certDataUrl) {
+      setShareNotice('Tip: generate your certificate first, then share it with the image attached.');
+    }
   }
 
   async function handleShareChannel(channel) {
@@ -321,19 +369,22 @@ export default function ResultPage() {
         </div>
 
         <div style={{ marginTop: 28, maxWidth: 980, marginLeft: 'auto', marginRight: 'auto', border: '1px solid rgba(201,165,88,0.2)', borderRadius: 12, padding: '16px 14px', background: 'rgba(201,165,88,0.03)' }}>
+          <p style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 14, textAlign: 'center' }}>
+            Cultural Identity Certificate
+          </p>
           {showCertOptions && (
             <>
               <p style={{
                 fontFamily: "'Cinzel', serif",
                 fontSize: 11,
                 letterSpacing: '0.14em',
-                color: '#C9A558',
+                color: '#9E7D42',
                 textTransform: 'uppercase',
                 marginBottom: 12,
                 textAlign: 'center',
               }}
               >
-                Choose certificate artwork
+                Choose certificate style
               </p>
               <div style={{
                 display: 'grid',
@@ -346,7 +397,7 @@ export default function ResultPage() {
                   <button
                     key={s.variant}
                     type="button"
-                    onClick={() => setCertVariant(s.variant)}
+                    onClick={() => { setCertVariant(s.variant); setShowPremiumGate(false); }}
                     style={{
                       border: certVariant === s.variant ? '2px solid #C9A558' : '1px solid rgba(201,165,88,0.28)',
                       borderRadius: 10,
@@ -356,8 +407,31 @@ export default function ResultPage() {
                       textAlign: 'center',
                       color: 'inherit',
                       WebkitTapHighlightColor: 'transparent',
+                      position: 'relative',
                     }}
                   >
+                    {s.premium && !premiumUnlocked && (
+                      <span style={{
+                        position: 'absolute', top: 6, right: 6,
+                        background: 'linear-gradient(135deg,#C9A558,#E8CB82)',
+                        color: '#1C0E04', fontSize: 9, fontFamily: "'Cinzel', serif",
+                        letterSpacing: '0.06em', padding: '2px 6px', borderRadius: 4,
+                        textTransform: 'uppercase', fontWeight: 700,
+                      }}>
+                        Premium
+                      </span>
+                    )}
+                    {s.premium && premiumUnlocked && (
+                      <span style={{
+                        position: 'absolute', top: 6, right: 6,
+                        background: 'rgba(34,197,94,0.2)', color: '#4ade80',
+                        fontSize: 9, fontFamily: "'Cinzel', serif",
+                        letterSpacing: '0.06em', padding: '2px 6px', borderRadius: 4,
+                        textTransform: 'uppercase',
+                      }}>
+                        Unlocked
+                      </span>
+                    )}
                     <img
                       src={s.src}
                       alt=""
@@ -382,6 +456,31 @@ export default function ResultPage() {
               </div>
             </>
           )}
+          {showPremiumGate && (
+            <div style={{
+              marginBottom: 16,
+              padding: '16px 18px',
+              background: 'rgba(201,165,88,0.06)',
+              border: '1px solid rgba(201,165,88,0.3)',
+              borderRadius: 10,
+              textAlign: 'center',
+            }}>
+              <p style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.14em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 6 }}>
+                Unlock Premium · Kente Style
+              </p>
+              <p style={{ color: '#BA9D7C', fontSize: 13, marginBottom: 14 }}>
+                Enter your email to unlock the premium Kente certificate — free, no payment needed.
+              </p>
+              <EmailCapture
+                akanName={name}
+                day={day}
+                dob={dob}
+                source="premium_cert_unlock"
+                compact
+                onSuccess={() => { setPremiumUnlocked(true); setShowPremiumGate(false); }}
+              />
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             {certDataUrl && certStepIndex === -1 && !certLoading && (
               <button
@@ -402,7 +501,7 @@ export default function ResultPage() {
                   ? 'Certificate Ready'
                   : showCertOptions
                     ? 'Generate Certificate'
-                  : 'Get Ghanaian Name Certificate'}
+                  : 'Get Cultural Identity Certificate'}
             </button>
           </div>
           {certStepIndex !== -1 && (
@@ -416,7 +515,30 @@ export default function ResultPage() {
             </p>
           )}
         </div>
-        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+          <button
+            onClick={handleWhatsAppShare}
+            style={{
+              background: '#25D366',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 999,
+              padding: '9px 18px',
+              fontFamily: "'Cinzel', serif",
+              fontSize: 11,
+              letterSpacing: '0.09em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontWeight: 600,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            {certDataUrl ? 'Share Certificate on WhatsApp' : 'Share on WhatsApp'}
+          </button>
           <div ref={shareMenuRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setShareMenuOpen((open) => !open)}
@@ -434,7 +556,7 @@ export default function ResultPage() {
                 minWidth: 140,
               }}
             >
-              Share
+              More Channels
             </button>
             {shareMenuOpen && (
               <div
@@ -488,6 +610,12 @@ export default function ResultPage() {
               </div>
             )}
           </div>
+          </div>
+          {!certDataUrl && (
+            <p style={{ color: '#5C4433', fontSize: 12, marginTop: 2, fontStyle: 'italic' }}>
+              Generate your certificate above to share it with the image attached
+            </p>
+          )}
         </div>
         {shareMeta.isLocalWithoutPublic && (
           <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
@@ -577,64 +705,42 @@ export default function ResultPage() {
         </div>
       </section>
 
-      {/* Merchandise section */}
-      <section style={{ padding: '48px 0 80px', borderTop: '1px solid rgba(201,165,88,0.1)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 40, padding: '0 20px' }}>
-          <h2 className="section-title">Wear Your Heritage</h2>
-          <p className="section-subtitle">Carry the spirit of {name} with you</p>
+      {/* Email capture — heritage updates */}
+      <section style={{
+        borderTop: '1px solid rgba(201,165,88,0.12)',
+        borderBottom: '1px solid rgba(201,165,88,0.12)',
+        padding: '48px 20px',
+        background: 'rgba(201,165,88,0.03)',
+        textAlign: 'center',
+      }}>
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
+          <EmailCapture
+            akanName={name}
+            day={day}
+            dob={dob}
+            source="result_page_banner"
+          />
         </div>
-        <div style={{ maxWidth: 1120, margin: '0 auto 24px', padding: '0 20px' }}>
-          <div style={{ border: '1px solid rgba(201,165,88,0.22)', borderRadius: 12, background: 'rgba(201,165,88,0.04)', padding: '14px 16px' }}>
-            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.14em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
-              Gifts for your day-born name
-            </div>
-            <p style={{ margin: 0, color: '#BA9D7C', fontSize: 14, lineHeight: 1.7 }}>
-              Pieces that match <strong style={{ color: '#E8CB82' }}>{day}</strong> names like <strong style={{ color: '#E8CB82' }}>{name}</strong>, then more from the collection.
-            </p>
-          </div>
-        </div>
-        <GoldDivider />
-        <h3 style={{
-          fontFamily: "'Cinzel', serif",
-          fontSize: 13,
-          letterSpacing: '0.16em',
-          color: '#C9A558',
-          textTransform: 'uppercase',
-          textAlign: 'center',
-          margin: '28px 0 16px',
-          padding: '0 20px',
-        }}
-        >
-          {dayBornMatchCount > 0 ? `${day}-born · ${name}` : `Heritage gifts · ${name}`}
-        </h3>
-        <div className="product-grid" style={{ paddingTop: 0 }}>
-          {dayBornPrimary.map((p, idx) => (
-            <ProductCard key={p.id} product={p} animationIndex={idx} />
-          ))}
-        </div>
-        {otherProducts.length > 0 && (
-          <>
-            <h3 style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 13,
-              letterSpacing: '0.16em',
-              color: '#C9A558',
-              textTransform: 'uppercase',
-              textAlign: 'center',
-              margin: '40px 0 16px',
-              padding: '0 20px',
-            }}
-            >
-              Other products
-            </h3>
-            <div className="product-grid" style={{ paddingTop: 0 }}>
-              {otherProducts.map((p, idx) => (
-                <ProductCard key={p.id} product={p} animationIndex={idx} />
-              ))}
-            </div>
-          </>
-        )}
       </section>
+
+      <WhiteProductSection
+        heading="Wear Your Heritage"
+        subtitle={`Carry the spirit of ${name} with you`}
+        categories={[
+          {
+            label: dayBornMatchCount > 0 ? `${day}-born · ${name}` : `Heritage gifts · ${name}`,
+            products: dayBornPrimary,
+            limit: dayBornPrimary.length,
+          },
+          ...(otherProducts.length > 0 ? [{
+            label: 'More from the collection',
+            products: otherProducts,
+            limit: otherProducts.length,
+          }] : []),
+        ]}
+        viewAllHref="/store"
+        viewAllLabel="Explore Full Shop"
+      />
 
       {/* Back button */}
       <div style={{ textAlign: 'center', padding: '0 20px 64px' }}>

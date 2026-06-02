@@ -79,6 +79,27 @@ export default function ProductCard({ product, animationIndex = 0 }) {
         >
           {product.label || product.type}
         </span>
+        {product.bornDay && (
+          <span
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              zIndex: 1,
+              background: 'rgba(26,26,26,0.82)',
+              color: '#E5C07B',
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 9,
+              letterSpacing: '0.08em',
+              fontWeight: 600,
+              padding: '4px 9px',
+              borderRadius: 999,
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            {product.bornDay}-born
+          </span>
+        )}
         <div
           className="store-product-card__well"
           style={{
@@ -150,18 +171,6 @@ export default function ProductCard({ product, animationIndex = 0 }) {
           >
             {product.name}
           </h3>
-          <span
-            style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontSize: 18,
-              fontWeight: 700,
-              color: '#8B6914',
-              letterSpacing: '0.02em',
-              flexShrink: 0,
-            }}
-          >
-            ${product.price}
-          </span>
         </Link>
 
         <p

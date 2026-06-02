@@ -5,36 +5,67 @@ import ProductCard from '../components/ProductCard';
 import { buildTrackedExternalUrl } from '../utils/commerceLinks';
 import { trackEvent } from '../utils/analytics';
 import { getOfficialPurchaseTarget } from '../utils/storefront';
+import useSEO from '../hooks/useSEO';
 
-const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies'];
+const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies', 'Babysuits'];
 
-/** Product ids shown on the store hero (right column), same line as signature bundles. */
-const STORE_HERO_IMAGE_IDS = [17, 19, 18];
+const DAY_FILTERS = ['All Days', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** Product ids shown on the store hero (right column). */
+const STORE_HERO_IMAGE_IDS = [27, 45, 56];
 
 export default function StorePage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeDayFilter, setActiveDayFilter] = useState('All Days');
   const [sortBy, setSortBy] = useState('featured');
 
+  useSEO({
+    title: 'Shop Akan Heritage Gifts — Day-Born T-Shirts, Mugs & Baby Bodysuits',
+    description: 'Shop premium Ghanaian day-born heritage gifts. T-shirts, mugs, baby bodysuits, hoodies, and gift bundles for every Akan day name. Ships worldwide.',
+    image: '/images/group of day borns.jpeg',
+  });
+
   useEffect(() => {
-    trackEvent('view_store', { filter: activeFilter, sort: sortBy });
-  }, [activeFilter, sortBy]);
+    trackEvent('view_store', { filter: activeFilter, day: activeDayFilter, sort: sortBy });
+  }, [activeFilter, activeDayFilter, sortBy]);
 
   const filtered = products.filter((p) => {
-    if (activeFilter === 'All') return true;
-    if (activeFilter === 'Mugs') return p.type === 'mug';
-    if (activeFilter === 'T-Shirts') return p.type === 'tshirt';
-    if (activeFilter === 'Hoodies') return p.type === 'hoodie';
-    return true;
+    const typeMatch = activeFilter === 'All'
+      || (activeFilter === 'Mugs' && p.type === 'mug')
+      || (activeFilter === 'T-Shirts' && p.type === 'tshirt')
+      || (activeFilter === 'Hoodies' && p.type === 'hoodie')
+      || (activeFilter === 'Babysuits' && p.type === 'babysuit');
+    const dayMatch = activeDayFilter === 'All Days' || p.bornDay === activeDayFilter;
+    return typeMatch && dayMatch;
   });
 
   const arranged = useMemo(() => {
     const list = [...filtered];
-    if (sortBy === 'price_asc') list.sort((a, b) => a.price - b.price);
-    if (sortBy === 'price_desc') list.sort((a, b) => b.price - a.price);
-    if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy === 'featured') list.sort((a, b) => a.id - b.id);
-    return list;
+    if (sortBy === 'price_asc') { list.sort((a, b) => a.price - b.price); return list; }
+    if (sortBy === 'price_desc') { list.sort((a, b) => b.price - a.price); return list; }
+    if (sortBy === 'name') { list.sort((a, b) => a.name.localeCompare(b.name)); return list; }
+    // Featured: interleave by type (mug → tshirt → hoodie → babysuit, repeat)
+    const order = ['mug', 'tshirt', 'hoodie', 'babysuit'];
+    const buckets = {};
+    order.forEach((t) => { buckets[t] = []; });
+    list.sort((a, b) => a.id - b.id).forEach((p) => {
+      if (buckets[p.type]) buckets[p.type].push(p);
+      else { if (!buckets._other) buckets._other = []; buckets._other.push(p); }
+    });
+    const allBuckets = [...order.map((t) => buckets[t]), buckets._other || []].filter((b) => b && b.length);
+    const mixed = [];
+    let i = 0;
+    while (mixed.length < list.length) {
+      let added = false;
+      for (let b = 0; b < allBuckets.length; b++) {
+        const bucket = allBuckets[(b + i) % allBuckets.length];
+        if (bucket.length > 0) { mixed.push(bucket.shift()); added = true; break; }
+      }
+      if (!added) break;
+      i++;
+    }
+    return mixed;
   }, [filtered, sortBy]);
 
   const spotlight = arranged[0];
@@ -72,8 +103,57 @@ export default function StorePage() {
     [],
   );
 
+  const productCount = filtered.length;
+
   return (
     <div className="page-wrapper store-shell" style={{ background: '#F3F1EC' }}>
+
+      {/* Shop identity strip — Etsy-style branding */}
+      <div style={{
+        background: '#fff',
+        borderBottom: '1px solid rgba(0,0,0,0.08)',
+        padding: '10px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #c4963e, #9a7224)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <span style={{ color: '#fff', fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700 }}>MA</span>
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: '#1a1a1a', letterSpacing: '0.06em' }}>MamaAfrica Couture</div>
+            <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, color: '#6a6a6a', letterSpacing: '0.04em' }}>
+              ★★★★★ <span style={{ color: '#8B6914', fontWeight: 600 }}>5.0</span>
+              <span style={{ margin: '0 6px', color: '#ccc' }}>·</span>
+              Heritage gifts for Akan day-borns
+            </div>
+          </div>
+        </div>
+        <a
+          href="https://www.etsy.com/shop/MamaAfricaCouture"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: '#F56400', color: '#fff',
+            borderRadius: 999, padding: '6px 14px',
+            fontFamily: "'Montserrat', sans-serif", fontSize: 11,
+            fontWeight: 700, letterSpacing: '0.08em', textDecoration: 'none',
+            textTransform: 'uppercase',
+          }}
+        >
+          View on Etsy →
+        </a>
+      </div>
+
       <section className="store-hero-wrap" style={{ padding: '38px 20px 26px', background: 'linear-gradient(180deg, rgba(158, 116, 40, 0.22) 0%, rgba(243, 241, 236, 0) 72%)' }}>
         <div className="store-hero-card" style={{
           width: '100%',
@@ -126,16 +206,41 @@ export default function StorePage() {
           fontSize: 12,
           letterSpacing: '0.04em',
         }}>
-          Secure checkout partner • Premium print quality • Delivery tracking after purchase
+          Secure Etsy checkout · Premium print quality · Delivery tracking after purchase
           {' '}
           <Link to="/shipping-returns" style={{ color: '#8B6914', textDecoration: 'underline' }}>Shipping & Returns</Link>
         </div>
-        <div style={{ width: '100%', marginBottom: 12, border: '1px solid rgba(201,165,76,0.28)', borderRadius: 999, background: '#EFEDE8', padding: '7px 12px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ color: '#6B5420', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif" }}>Legal & Trust</span>
-          <Link to="/privacy-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Privacy</Link>
-          <Link to="/terms" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Terms</Link>
-          <Link to="/cookie-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Cookies</Link>
+
+        {/* Browse by Day Born */}
+        <div style={{ width: '100%', marginBottom: 14 }}>
+          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, letterSpacing: '0.14em', color: '#8A6B2D', textTransform: 'uppercase', marginBottom: 8 }}>
+            Browse by Day Born
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {DAY_FILTERS.map((day) => (
+              <button
+                key={day}
+                onClick={() => setActiveDayFilter(day)}
+                style={{
+                  background: activeDayFilter === day ? '#1a1a1a' : '#fff',
+                  color: activeDayFilter === day ? '#E5C07B' : '#4a4a4a',
+                  border: activeDayFilter === day ? '1px solid #1a1a1a' : '1px solid rgba(0,0,0,0.15)',
+                  padding: '7px 14px',
+                  borderRadius: 999,
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: 11,
+                  letterSpacing: '0.06em',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                }}
+              >
+                {day === 'All Days' ? '✦ All Days' : day}
+              </button>
+            ))}
+          </div>
         </div>
+
         <div className="store-controls-row" style={{
           width: '100%',
           display: 'flex',
@@ -144,28 +249,34 @@ export default function StorePage() {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <div className="store-filter-group" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {categories.map((cat) => (
-              <button
-                className={`store-filter-btn ${activeFilter === cat ? 'active' : ''}`}
-                key={cat}
-                onClick={() => setActiveFilter(cat)}
-                style={{
-                  background: activeFilter === cat ? '#E5C07B' : 'transparent',
-                  color: activeFilter === cat ? '#111111' : '#6F6F6F',
-                  border: activeFilter === cat ? '1px solid #E5C07B' : '1px solid #B8B8B8',
-                  padding: '10px 16px',
-                  borderRadius: 999,
-                  fontFamily: "'Montserrat', sans-serif",
-                  letterSpacing: '0.08em',
-                  fontSize: 12,
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                }}
-              >
-                {cat}
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', flex: 1 }}>
+            <div className="store-filter-group" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {categories.map((cat) => (
+                <button
+                  className={`store-filter-btn ${activeFilter === cat ? 'active' : ''}`}
+                  key={cat}
+                  onClick={() => setActiveFilter(cat)}
+                  style={{
+                    background: activeFilter === cat ? '#E5C07B' : 'transparent',
+                    color: activeFilter === cat ? '#111111' : '#6F6F6F',
+                    border: activeFilter === cat ? '1px solid #E5C07B' : '1px solid #B8B8B8',
+                    padding: '9px 14px',
+                    borderRadius: 999,
+                    fontFamily: "'Montserrat', sans-serif",
+                    letterSpacing: '0.08em',
+                    fontSize: 11,
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, color: '#8a8a8a', letterSpacing: '0.04em', marginLeft: 4 }}>
+              {productCount} item{productCount !== 1 ? 's' : ''}
+            </span>
           </div>
           <select
             className="store-sort-select"
@@ -182,10 +293,14 @@ export default function StorePage() {
             }}
           >
             <option value="featured">Featured</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
             <option value="name">Name</option>
           </select>
+        </div>
+        <div style={{ width: '100%', marginTop: 10, border: '1px solid rgba(201,165,76,0.28)', borderRadius: 999, background: '#EFEDE8', padding: '7px 12px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ color: '#6B5420', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: "'Cinzel', serif" }}>Legal & Trust</span>
+          <Link to="/privacy-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Privacy</Link>
+          <Link to="/terms" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Terms</Link>
+          <Link to="/cookie-policy" style={{ color: '#8B6914', textDecoration: 'underline', fontSize: 11 }}>Cookies</Link>
         </div>
       </section>
 
@@ -241,9 +356,6 @@ export default function StorePage() {
                 </h2>
                 <p style={{ color: '#5a5a5a', fontFamily: "'Montserrat', sans-serif", fontSize: 15, lineHeight: 1.7, marginBottom: 16 }}>
                   {spotlight.description}
-                </p>
-                <p style={{ color: '#8B6914', fontFamily: "'Montserrat', sans-serif", fontSize: 30, fontWeight: 700, marginBottom: 16 }}>
-                  ${spotlight.price}
                 </p>
                 <button
                   type="button"
@@ -414,11 +526,24 @@ export default function StorePage() {
 
       <section className="store-grid-wrap" style={{ padding: '0 0 64px', background: 'linear-gradient(180deg, rgba(243,241,236,0) 0%, rgba(138,107,45,0.06) 100%)' }}>
         {arranged.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6a6a6a', fontStyle: 'italic', padding: '40px 20px' }}>
-            More {activeFilter} coming soon.
-          </p>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <p style={{ color: '#6a6a6a', fontStyle: 'italic', marginBottom: 16 }}>
+              No {activeFilter === 'All' ? '' : activeFilter + ' '}products found
+              {activeDayFilter !== 'All Days' ? ` for ${activeDayFilter}-born` : ''}.
+            </p>
+            <button
+              onClick={() => { setActiveFilter('All'); setActiveDayFilter('All Days'); }}
+              style={{
+                background: '#E5C07B', color: '#111', border: 'none', borderRadius: 999,
+                padding: '10px 24px', fontFamily: "'Montserrat', sans-serif",
+                fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer',
+              }}
+            >
+              View all products
+            </button>
+          </div>
         ) : (
-          <div className="product-grid store-product-grid" style={{ width: '100%', maxWidth: 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+          <div className="product-grid store-product-grid" style={{ width: '100%', maxWidth: 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {(rest.length ? rest : arranged).map((p, idx) => <ProductCard key={p.id} product={p} animationIndex={idx} />)}
           </div>
         )}

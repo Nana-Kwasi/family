@@ -1,6 +1,8 @@
 import React from 'react';
 import { products } from '../data/products';
-import ProductCard from '../components/ProductCard';
+import WhiteProductSection from '../components/ui/WhiteProductSection';
+import TestimonialsSection from '../components/ui/TestimonialsSection';
+import useSEO from '../hooks/useSEO';
 
 const GoldDivider = () => (
   <div className="gold-divider">
@@ -22,14 +24,20 @@ const tracks = [
 ];
 
 const socials = [
-  { name: 'Instagram', handle: '@afia.official', url: '#', icon: '📸' },
-  { name: 'TikTok', handle: '@afia.music', url: '#', icon: '🎵' },
-  { name: 'X (Twitter)', handle: '@AfiaAkan', url: '#', icon: '𝕏' },
+  { name: 'Facebook', handle: 'Mama Africa', url: 'https://www.facebook.com/profile.php?id=61590121032184', icon: 'f' },
+  { name: 'Instagram', handle: '@Mamaafricaafia', url: 'https://www.instagram.com/Mamaafricaafia', icon: '📸' },
+  { name: 'TikTok', handle: '@Mamaafricacouture', url: 'https://www.tiktok.com/@Mamaafricacouture', icon: '🎵' },
+  { name: 'X (Twitter)', handle: '@mamaafrica', url: 'https://x.com/mamaafrica', icon: '𝕏' },
   { name: 'YouTube', handle: '@mamaafricaafia', url: 'https://youtube.com/@mamaafricaafia?si=y0TOjenc86ksN-Ez', icon: '▶' },
-  { name: 'Spotify', handle: 'Afia', url: '#', icon: '🎧' },
 ];
 
 export default function AboutPage() {
+  useSEO({
+    title: 'About Mama Africa — Ghanaian Heritage & Akan Culture',
+    description: 'Meet Afia, the AI avatar of Mama Africa Official Ghana. Discover the mission behind authentic Akan day-born heritage gifts, music, and cultural education.',
+    image: '/images/afia-hero.jpg',
+  });
+
   return (
     <div className="page-wrapper">
       {/* Meet Afia */}
@@ -157,19 +165,20 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Merchandise */}
-      <section style={{ borderTop: '1px solid rgba(201,165,88,0.1)', padding: '64px 0 80px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 40, padding: '0 20px' }}>
-          <h2 className="section-title">Merchandise</h2>
-          <p className="section-subtitle">Heritage names, culture, and gift-ready keepsakes for every generation</p>
-        </div>
-        <GoldDivider />
-        <div className="product-grid" style={{ paddingTop: 24 }}>
-          {products.map(p => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      <TestimonialsSection dark={false} />
+
+      <WhiteProductSection
+        heading="Merchandise"
+        subtitle="Heritage names, culture, and gift-ready keepsakes for every generation"
+        categories={[
+          { label: 'T-Shirts',        products: products.filter(p => p.type === 'tshirt') },
+          { label: 'Baby Bodysuits',  products: products.filter(p => p.type === 'babysuit') },
+          { label: 'Mugs',            products: products.filter(p => p.type === 'mug') },
+          { label: 'Hoodies & Hats',  products: products.filter(p => p.type === 'hoodie') },
+        ]}
+        viewAllHref="/store"
+        viewAllLabel="View Full Shop"
+      />
     </div>
   );
 }
