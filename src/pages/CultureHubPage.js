@@ -99,6 +99,28 @@ const hubs = [
     kente: ['#b05060', '#1a1a1a', '#C9A558', '#b05060', '#1a1a1a'],
     colourMeaning: 'Red: the blood that connects every diaspora soul to the motherland — sacrifice and survival.',
   },
+  {
+    to: '/culture/village',
+    symbol: '🌿',
+    title: 'Ancient Village Life',
+    subtitle: 'A Morning & Night — 10 Scenes',
+    desc: 'Step inside a cinematic documentary of an ancient Ghanaian village — mud houses, water carriers, farmers at dawn, children at play, and elders under the great tree. Narrated with ambient village sound.',
+    color: '#8B6914',
+    kente: ['#8B6914', '#5a9e6a', '#C9A558', '#2d6e3e', '#8B6914'],
+    colourMeaning: 'Earth tones: the red clay of the earth, the brown of mud walls — the colours life is built from.',
+    badge: 'Video',
+  },
+  {
+    to: '/culture/landscapes',
+    symbol: '◉',
+    title: 'Ghana Landscapes',
+    subtitle: 'Castles · Rivers · Forests · Mountains',
+    desc: 'An immersive documentary of Ghana\'s physical heritage — Cape Coast Castle, Lake Volta, Kakum Forest, Mount Afadjato, and 20 more landmarks. Narration, ambient sound, and deep cultural context.',
+    color: '#4a9ec4',
+    kente: ['#4a9ec4', '#C9A558', '#5a9e6a', '#9b7fc8', '#4a9ec4'],
+    colourMeaning: 'Blue: the Atlantic, the rivers, and the sky that connects Ghana to every corner of the diaspora.',
+    badge: 'New',
+  },
 ];
 
 // ── Journey Steps ─────────────────────────────────────────────────────────────
@@ -125,8 +147,6 @@ export default function CultureHubPage() {
   const todayIndex = now.getDay();
   const akanToday = AKAN_DAYS[todayIndex];
   const festival = MONTHLY_FESTIVALS[now.getMonth()];
-  const proverb = PROVERBS[now.getDate() % PROVERBS.length];
-
   const [proverbFading, setProverbFading] = useState(false);
   const [proverbIndex, setProverbIndex] = useState(now.getDate() % PROVERBS.length);
 
@@ -267,7 +287,7 @@ export default function CultureHubPage() {
 
         {/* ── Hub Cards ────────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 56 }}>
-          {hubs.map(({ to, symbol, title, subtitle, desc, color, kente, colourMeaning }) => (
+          {hubs.map(({ to, symbol, title, subtitle, desc, color, kente, colourMeaning, badge }) => (
             <Link key={to} to={to} style={{ textDecoration: 'none' }}>
               <div
                 className="culture-hub-card"
@@ -289,8 +309,18 @@ export default function CultureHubPage() {
                   }}>
                     {symbol}
                   </div>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: 17, color, letterSpacing: '0.07em', marginBottom: 4 }}>
-                    {title}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: 17, color, letterSpacing: '0.07em' }}>
+                      {title}
+                    </div>
+                    {badge && (
+                      <span style={{
+                        fontFamily: "'Montserrat', sans-serif", fontSize: 9, fontWeight: 700,
+                        letterSpacing: '0.12em', textTransform: 'uppercase',
+                        color: '#111', background: color,
+                        borderRadius: 999, padding: '2px 8px',
+                      }}>{badge}</span>
+                    )}
                   </div>
                   <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 10, color: '#7C5F48', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 14 }}>
                     {subtitle}
