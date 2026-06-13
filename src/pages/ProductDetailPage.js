@@ -45,12 +45,6 @@ export default function ProductDetailPage() {
   }, [imagePreviewOpen, closeImagePreview]);
 
   function handleExternalPurchase() {
-    const needsSize = product.sizes && product.sizes.length > 0 && !['11oz','15oz'].includes(product.sizes[0]);
-    if (needsSize && !selectedSize) {
-      setFeedbackMsg('Please select a size first.');
-      setTimeout(() => setFeedbackMsg(''), 3000);
-      return;
-    }
     if (!targetUrl) {
       setFeedbackMsg('Store link is not configured yet.');
       setTimeout(() => setFeedbackMsg(''), 3000);
@@ -525,15 +519,14 @@ export default function ProductDetailPage() {
         <div className="store-mobile-sticky-buy-inner">
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5F48' }}>
-              {needsSize ? (selectedSize ? `Size: ${selectedSize}` : 'Select Size to Continue') : 'Ready to Checkout'}
+              {selectedSize ? `Size: ${selectedSize}` : 'Select a size (optional)'}
             </div>
           </div>
           <button
             className="store-btn-primary"
             onClick={handleExternalPurchase}
-            disabled={needsSize && !selectedSize}
             style={{
-              background: needsSize && !selectedSize ? '#BFA77A' : '#111111',
+              background: '#111111',
               color: '#E5C07B',
               border: 'none',
               borderRadius: 10,

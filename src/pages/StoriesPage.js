@@ -508,19 +508,12 @@ function StorybookShelfCard({ title, subtitle, meta, onOpen }) {
 
 function getStorySuggestedProducts(story) {
   const hay = `${story?.title || ''} ${story?.subtitle || ''} ${story?.content || ''} ${story?.intro || ''}`.toLowerCase();
-  if (hay.includes('tea') || hay.includes('drink') || hay.includes('kitchen') || hay.includes('home')) {
-    return products.filter(p => p.type === 'mug').slice(0, 2);
+  const tshirts = products.filter(p => p.type === 'tshirt').slice(0, 2);
+  if (hay.includes('baby') || hay.includes('newborn') || hay.includes('naming') || hay.includes('outdooring')) {
+    const bodysuits = products.filter(p => p.type === 'babysuit').slice(0, 2);
+    return bodysuits.length ? bodysuits : tshirts;
   }
-  if (hay.includes('warm') || hay.includes('winter') || hay.includes('night')) {
-    return products.filter(p => p.type === 'hoodie').slice(0, 2);
-  }
-  if (hay.includes('festival') || hay.includes('heritage') || hay.includes('culture')) {
-    return products.filter(p => p.type === 'tshirt').slice(0, 2);
-  }
-  if (hay.includes('wedding') || hay.includes('marriage') || hay.includes('mourning') || hay.includes('funeral')) {
-    return products.filter(p => p.type === 'tshirt').slice(0, 2);
-  }
-  return products.slice(0, 2);
+  return tshirts;
 }
 
 function InspiredGiftsSection({ products, storyId, onPickProduct }) {

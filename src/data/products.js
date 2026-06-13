@@ -246,9 +246,13 @@ const INDIVIDUAL_PRODUCTS = [
   // ════════════════════════════════════════════════════════════
   {
     id: 39, name: 'Kwabena Tuesday Born T-Shirt — Blue', bornDay: 'Tuesday',
-    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Blue · Sankofa symbol',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Blue · Front & Sankofa Back',
     description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. Blue colourway with Sankofa Adinkra symbol on the back.',
     image: pi('blue kwabena day born t shirt.png'),
+    images: [
+      pi('blue kwabena day born t shirt.png'),
+      pi('back side of blue kwabena day born t shirt.png'),
+    ],
     etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE,
   },
   {
@@ -262,32 +266,23 @@ const INDIVIDUAL_PRODUCTS = [
     ],
     etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE,
   },
-  {
-    id: 43, name: 'Kwabena Tuesday Born T-Shirt — Blue Sankofa Back', bornDay: 'Tuesday',
-    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Blue · Sankofa back view',
-    description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. Back view of the Blue colourway showing the full Sankofa Adinkra symbol.',
-    image: pi('back side of blue kwabena day born t shirt.png'),
-    etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE,
-  },
+  // ID 43 merged into ID 39 gallery (Blue Sankofa Back now shown on ID 39 detail screen)
+  { id: 43, hidden: true, name: 'Kwabena Tuesday Born T-Shirt — Blue Sankofa Back', bornDay: 'Tuesday', image: pi('back side of blue kwabena day born t shirt.png'), etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE },
   {
     id: 45, name: 'Kwabena Tuesday Born T-Shirt — Folded', bornDay: 'Tuesday',
-    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Black · Folded display',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Black · Folded · Neckline detail',
     description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. Folded display of the Black colourway — great for gifting.',
     image: pi('folded black kwabena day born t shirt.png'),
     images: [
       pi('folded black kwabena day born t shirt.png'),
       pi('black kwabena day born t shirt.png'),
       pi('back side of black kwabena day born t shirt.png'),
+      pi('neck of black kwabena day born t shirt.png'),
     ],
     etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE,
   },
-  {
-    id: 46, name: 'Kwabena Tuesday Born T-Shirt — Neckline Detail', bornDay: 'Tuesday',
-    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Black · Neckline close-up',
-    description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. Close-up of the neckline and print quality on the Black colourway.',
-    image: pi('neck of black kwabena day born t shirt.png'),
-    etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE,
-  },
+  // ID 46 merged into ID 45 gallery (Neckline Detail now shown on ID 45 detail screen)
+  { id: 46, hidden: true, name: 'Kwabena Tuesday Born T-Shirt — Neckline Detail', bornDay: 'Tuesday', image: pi('neck of black kwabena day born t shirt.png'), etsyUrl: KWABENA_ETSY, ...TSHIRT_BASE },
 
   // ════════════════════════════════════════════════════════════
   // KOFI T-SHIRT VARIANTS  (IDs 49, 54)
@@ -322,19 +317,14 @@ const INDIVIDUAL_PRODUCTS = [
   // ════════════════════════════════════════════════════════════
   // NEW HOODIE  (ID 56)
   // ════════════════════════════════════════════════════════════
-  {
-    id: 56, name: 'Kwabena & Abena Tuesday Born Hoodie', bornDay: 'Tuesday',
-    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Premium hoodie · New design',
-    description: 'Premium heritage hoodie for the Tuesday-born pair — Kwabena and Abena. Warm, comfortable, and beautifully designed to celebrate Akan day-name tradition.',
-    image: pi('new kwabena and abena hoodie.png'),
-    ...HOODIE_BASE,
-  },
+  // ID 56 hidden until winter — hoodie
+  { id: 56, hidden: true, name: 'Kwabena & Abena Tuesday Born Hoodie', bornDay: 'Tuesday', image: pi('new kwabena and abena hoodie.png'), ...HOODIE_BASE },
 
   // ════════════════════════════════════════════════════════════
-  // MUGS — only products with dedicated named mug photos  (IDs 57–64)
+  // MUGS — hidden (IDs 57–64) — re-enable by removing hidden: true
   // ════════════════════════════════════════════════════════════
   {
-    id: 57, name: 'Kwasi Sunday Born Mug', bornDay: 'Sunday',
+    id: 57, hidden: true, name: 'Kwasi Sunday Born Mug', bornDay: 'Sunday',
     tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Adinkra symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Kwasi, the Sunday-born. Features Adinkra symbol design — a powerful daily-use cultural gift.',
     image: pi('Kwasi Sunday Born Mug.png'),
@@ -343,7 +333,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 58, name: 'Kwame Saturday Born Mug', bornDay: 'Saturday',
+    id: 58, hidden: true, name: 'Kwame Saturday Born Mug', bornDay: 'Saturday',
     tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Sankofa · 3 styles & colours',
     description: 'Premium ceramic heritage mug for Kwame, the Saturday-born. Features Sankofa Adinkra symbol across three colour variants — Black, Standard, and Light Blue.',
     image: pi('Kwame Saturday Born Mug .png'),
@@ -358,7 +348,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 59, name: 'Akosua Sunday Born Mug', bornDay: 'Sunday',
+    id: 59, hidden: true, name: 'Akosua Sunday Born Mug', bornDay: 'Sunday',
     tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Sankofa symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Akosua, the Sunday-born. Features the Sankofa Adinkra symbol — a beautiful daily-use gift.',
     image: pi('Akosua Sunday Born Mug.png'),
@@ -367,7 +357,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 60, name: 'Akua Wednesday Born Mug', bornDay: 'Wednesday',
+    id: 60, hidden: true, name: 'Akua Wednesday Born Mug', bornDay: 'Wednesday',
     tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Sankofa symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Akua, the Wednesday-born. Features the Sankofa Adinkra symbol — a beautiful daily-use gift.',
     image: pi('Akua Wednesday Born Mug.png'),
@@ -376,7 +366,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 61, name: 'Yaw Thursday Born Mug', bornDay: 'Thursday',
+    id: 61, hidden: true, name: 'Yaw Thursday Born Mug', bornDay: 'Thursday',
     tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Gye Nyame symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Yaw, the Thursday-born. Features the Gye Nyame Adinkra symbol — a meaningful cultural gift.',
     image: pi('Yaw Thursday Born Mug.png'),
@@ -385,7 +375,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 62, name: 'Yaa Thursday Born Mug', bornDay: 'Thursday',
+    id: 62, hidden: true, name: 'Yaa Thursday Born Mug', bornDay: 'Thursday',
     tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Gye Nyame symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Yaa, the Thursday-born. Features the Gye Nyame Adinkra symbol — a beautiful cultural gift.',
     image: pi('Yaa Thursday Born Mug.png'),
@@ -394,7 +384,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 63, name: 'Afia Friday Born Mug', bornDay: 'Friday',
+    id: 63, hidden: true, name: 'Afia Friday Born Mug', bornDay: 'Friday',
     tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Gye Nyame symbol · Ceramic mug',
     description: 'Premium ceramic heritage mug for Afia, the Friday-born. Features the Gye Nyame Adinkra symbol — a powerful cultural gift.',
     image: pi('Afia Friday Born Mug.png'),
@@ -403,7 +393,7 @@ const INDIVIDUAL_PRODUCTS = [
     ...MUG_BASE,
   },
   {
-    id: 64, name: 'Kofi Friday Born Mug', bornDay: 'Friday',
+    id: 64, hidden: true, name: 'Kofi Friday Born Mug', bornDay: 'Friday',
     tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Heritage design · Ceramic mug',
     description: 'Premium ceramic heritage mug for Kofi, the Friday-born. A meaningful daily-use gift celebrating Akan day-name tradition.',
     image: pi('Kofi Friday Born Mug.png'),
@@ -436,7 +426,6 @@ const INDIVIDUAL_PRODUCTS = [
     tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Multiple colours · Infant bodysuit',
     description: 'Personalized heritage infant bodysuit for Kwasi, the Sunday-born baby. A meaningful cultural gift for newborns celebrating their Akan day-name identity.',
     image: pi('Kwesi Sunday Born babysuit.png'),
-    images: [pi('Kwesi Sunday Born babysuit.png'), pi('kwasi sunday born babysuit.png')],
     etsyUrl: 'https://www.etsy.com/listing/4509971546/kwasi-sunday-born-infant-bodysuit',
     ...BABYSUIT_BASE,
   },
@@ -491,9 +480,13 @@ const INDIVIDUAL_PRODUCTS = [
   },
   {
     id: 73, name: 'Kwaku Wednesday Born Baby Bodysuit', bornDay: 'Wednesday',
-    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'White · Infant bodysuit',
-    description: 'Personalized heritage infant bodysuit for Kwaku, the Wednesday-born baby. White colourway — a meaningful cultural gift for newborns.',
-    image: pi('kwaku Tuesday Born white babysuit.png'),
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Black & White options · Infant bodysuit',
+    description: 'Personalized heritage infant bodysuit for Kwaku, the Wednesday-born baby. Available in Black and White colourways — a meaningful cultural gift for newborns.',
+    image: pi('baby-wearing-black-kweku-babysuit.png'),
+    images: [
+      pi('baby-wearing-black-kweku-babysuit.png'),
+      pi('kwaku Tuesday Born white babysuit.png'),
+    ],
     etsyUrl: 'https://www.etsy.com/listing/4509935302/kwaku-wednesday-born-infant-bodysuit',
     ...BABYSUIT_BASE,
   },
@@ -795,7 +788,7 @@ const INDIVIDUAL_PRODUCTS = [
   // NEW ACCESSORY  (ID 113)
   // ════════════════════════════════════════════════════════════
   {
-    id: 113, name: 'Ghana Visor Hat', bornDay: null,
+    id: 113, hidden: true, name: 'Ghana Visor Hat', bornDay: null,
     tagline: 'Afia Premium · Ghana Heritage', cardBlurb: 'Ghana heritage visor',
     description: 'Heritage visor hat celebrating Ghanaian culture. A stylish everyday accessory with a proud cultural statement — perfect as a gift or personal wear.',
     image: pi('ghana visor hat .jpeg'),
@@ -808,36 +801,38 @@ const INDIVIDUAL_PRODUCTS = [
   },
 ];
 
-export const products = [...legacyProducts, ...INDIVIDUAL_PRODUCTS];
+// legacyProducts excluded — contains Mother's Day items, hoodie combos, tumbler, no Etsy links
+// Re-add legacyProducts to the array below when needed for seasonal campaigns
+export const products = [...INDIVIDUAL_PRODUCTS].filter((p) => !p.hidden);
 
 export const STORE_BUNDLE_SETS = [
   {
     id: 'naming-ceremony',
     title: 'Naming Ceremony Bundle',
-    subtitle: 'T-Shirt + Baby Bodysuit + Mug',
-    desc: 'Everything you need to celebrate a new life in Akan tradition. A T-shirt for the parents, a heritage bodysuit for the baby, and a mug to mark the milestone.',
-    productIds: [29, 80, 58],
+    subtitle: 'T-Shirt + Baby Bodysuit',
+    desc: 'Everything you need to celebrate a new life in Akan tradition. A day-born T-shirt for the parents and a heritage bodysuit for the baby.',
+    productIds: [29, 30, 80, 79],
   },
   {
-    id: 'mothers-signature',
-    title: "Mother's Signature Set",
-    subtitle: 'Hoodie + Mug',
-    desc: 'A premium pairing designed for warmth and daily ritual.',
-    productIds: [17, 18],
+    id: 'friday-born-set',
+    title: 'Friday Born Signature Set',
+    subtitle: 'Kofi & Afia T-Shirts + Baby Bodysuits',
+    desc: 'The complete Friday-born collection — premium heritage T-shirts for Kofi and Afia, plus matching baby bodysuits. All linked to Etsy.',
+    productIds: [27, 28, 78, 77],
   },
   {
-    id: 'heritage-everyday',
-    title: 'Heritage Everyday Set',
-    subtitle: 'T-Shirt + Mug',
-    desc: 'An effortless heritage combo for daily wear and comfort.',
-    productIds: [19, 18],
+    id: 'saturday-born-set',
+    title: 'Saturday Born Signature Set',
+    subtitle: 'Kwame & Ama T-Shirts + Baby Bodysuits',
+    desc: 'The complete Saturday-born collection — premium heritage T-shirts for Kwame and Ama, plus matching baby bodysuits. All linked to Etsy.',
+    productIds: [29, 30, 80, 79],
   },
   {
-    id: 'legacy-premium',
-    title: 'Legacy Premium Set',
-    subtitle: 'Hoodie + T-Shirt + Mug',
-    desc: 'A complete gift collection for meaningful celebrations.',
-    productIds: [17, 19, 18],
+    id: 'tuesday-born-set',
+    title: 'Tuesday Born Signature Set',
+    subtitle: 'Kwabena & Abena T-Shirts + Baby Bodysuits',
+    desc: 'The complete Tuesday-born collection — premium heritage T-shirts for Kwabena and Abena, plus matching baby bodysuits. All linked to Etsy.',
+    productIds: [39, 35, 72, 71],
   },
 ];
 

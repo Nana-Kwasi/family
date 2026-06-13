@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
 
+// Real active products — day-born T-shirts and baby bodysuits
 const featured = [
-  products.find((p) => p.type === 'hoodie'),
-  products.find((p) => p.type === 'mug'),
+  products.find((p) => p.id === 27),  // Kofi Friday Born T-Shirt
+  products.find((p) => p.id === 39),  // Kwabena Tuesday Born T-Shirt — Blue
+  products.find((p) => p.id === 65),  // Akosua Sunday Born Baby Bodysuit
+  products.find((p) => p.id === 80),  // Kwame Saturday Born Baby Bodysuit
 ].filter(Boolean);
 
 export default function WelcomePopup() {
@@ -39,10 +42,9 @@ export default function WelcomePopup() {
         @keyframes slideUpCard { from { opacity: 0; transform: translateY(28px) } to { opacity: 1; transform: translateY(0) } }
       `}</style>
 
-      {/* Card wrapper — centres vertically when content fits, otherwise scrolls */}
       <div style={{ width: '100%', maxWidth: 520, margin: 'auto', paddingTop: 8 }}>
 
-        {/* Close bar — always visible at the top */}
+        {/* Close button */}
         <div
           onClick={e => e.stopPropagation()}
           style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}
@@ -87,7 +89,7 @@ export default function WelcomePopup() {
             letterSpacing: '0.24em', color: '#C9A558',
             textTransform: 'uppercase', marginBottom: 14, textAlign: 'center',
           }}>
-            🌸 &nbsp; Limited Edition · Mother's Day Collection
+            ✦ &nbsp; Akan Heritage Collection
           </p>
 
           {/* Headline */}
@@ -100,8 +102,8 @@ export default function WelcomePopup() {
             textAlign: 'center',
             marginBottom: 14,
           }}>
-            She Gave You Everything —<br />
-            <span style={{ color: '#C9A558' }}>Now Give Her Something Unforgettable.</span>
+            Wear the Name You Were<br />
+            <span style={{ color: '#C9A558' }}>Born With.</span>
           </h2>
 
           {/* Body */}
@@ -110,28 +112,14 @@ export default function WelcomePopup() {
             fontSize: 17, color: '#D4B896', fontStyle: 'italic',
             lineHeight: 1.8, textAlign: 'center', marginBottom: 22,
           }}>
-            Our Mother's Day collection features premium, heartfelt gifts crafted to honour
-            the remarkable women who shape our world. These are{' '}
-            <strong style={{ color: '#E8CB82', fontStyle: 'normal' }}>limited edition</strong> — once
-            they're gone, they're gone. Secure hers today before it's too late.
+            In Akan tradition, the day you were born gives you a name, a spirit, and a legacy.
+            Our premium day-born T-shirts and baby bodysuits let you carry that heritage
+            with pride — for every generation.
           </p>
 
-          {/* Urgency pill */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
-            <span style={{
-              fontFamily: "'Montserrat', sans-serif", fontSize: 12, fontWeight: 600,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              background: 'rgba(200,130,108,0.18)', color: '#E8A882',
-              border: '1px solid rgba(200,130,108,0.35)',
-              borderRadius: 50, padding: '5px 16px',
-            }}>
-              ⏳ &nbsp; Selling fast — limited stock remaining
-            </span>
-          </div>
-
-          {/* Product previews */}
+          {/* Product grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-            {featured.map(p => p && (
+            {featured.map(p => (
               <div
                 key={p.id}
                 onClick={() => { setVisible(false); navigate(`/product/${p.id}`); }}
@@ -150,12 +138,9 @@ export default function WelcomePopup() {
                 />
                 <div style={{ padding: '10px 12px' }}>
                   <p style={{
-                    fontFamily: "'Playfair Display', serif", fontSize: 14,
-                    color: '#EDD9BC', lineHeight: 1.3, marginBottom: 4,
+                    fontFamily: "'Playfair Display', serif", fontSize: 13,
+                    color: '#EDD9BC', lineHeight: 1.3,
                   }}>{p.name}</p>
-                  <p style={{ fontFamily: "'Cinzel', serif", fontSize: 14, color: '#C9A558' }}>
-                    ${p.price}
-                  </p>
                 </div>
               </div>
             ))}

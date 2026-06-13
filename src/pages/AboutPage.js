@@ -171,10 +171,8 @@ export default function AboutPage() {
         heading="Merchandise"
         subtitle="Heritage names, culture, and gift-ready keepsakes for every generation"
         categories={[
-          { label: 'T-Shirts',        products: products.filter(p => p.type === 'tshirt') },
-          { label: 'Baby Bodysuits',  products: products.filter(p => p.type === 'babysuit') },
-          { label: 'Mugs',            products: products.filter(p => p.type === 'mug') },
-          { label: 'Hoodies & Hats',  products: products.filter(p => p.type === 'hoodie') },
+          { label: 'T-Shirts',       products: products.filter(p => p.type === 'tshirt') },
+          { label: 'Baby Bodysuits', products: products.filter(p => p.type === 'babysuit') },
         ]}
         viewAllHref="/store"
         viewAllLabel="View Full Shop"

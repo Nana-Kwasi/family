@@ -1,6 +1,6 @@
 const PRINTIFY_FALLBACK = process.env.REACT_APP_PRINTIFY_STORE_URL || '';
 const ETSY_FALLBACK = process.env.REACT_APP_ETSY_STORE_URL || '';
-const PRIORITY = (process.env.REACT_APP_OFFICIAL_STORE_PRIORITY || 'printify').toLowerCase();
+const PRIORITY = (process.env.REACT_APP_OFFICIAL_STORE_PRIORITY || 'etsy').toLowerCase();
 
 /**
  * One official checkout path per product: prefer Printify or Etsy based on env,
