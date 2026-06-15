@@ -46,7 +46,16 @@ export default function AdinkraPage() {
               onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,165,88,0.45)'}
               onMouseLeave={e => e.currentTarget.style.borderColor = selected?.id === sym.id ? 'rgba(201,165,88,0.5)' : 'rgba(201,165,88,0.15)'}
             >
-              <div style={{ fontSize: 40, marginBottom: 14, lineHeight: 1 }}>{sym.symbol}</div>
+              {sym.image ? (
+                <img
+                  src={sym.image}
+                  alt={sym.name}
+                  loading="lazy"
+                  style={{ width: '100%', height: 120, objectFit: 'contain', marginBottom: 14, display: 'block' }}
+                />
+              ) : (
+                <div style={{ fontSize: 40, marginBottom: 14, lineHeight: 1 }}>{sym.symbol}</div>
+              )}
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: 15, color: '#C9A558', letterSpacing: '0.08em', marginBottom: 4 }}>{sym.name}</div>
               <div style={{ fontFamily: "'EB Garamond', serif", fontSize: 14, color: '#7C5F48', fontStyle: 'italic', marginBottom: 12 }}>"{sym.translation}"</div>
               <span style={{
@@ -81,7 +90,15 @@ export default function AdinkraPage() {
             }}>✕</button>
 
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 56, marginBottom: 16 }}>{selected.symbol}</div>
+              {selected.image ? (
+                <img
+                  src={selected.image}
+                  alt={selected.name}
+                  style={{ width: '100%', maxWidth: 240, height: 200, objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
+                />
+              ) : (
+                <div style={{ fontSize: 56, marginBottom: 16 }}>{selected.symbol}</div>
+              )}
               <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: 26, color: '#C9A558', letterSpacing: '0.1em', marginBottom: 6 }}>{selected.name}</h2>
               <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 18, color: '#7C5F48', fontStyle: 'italic', marginBottom: 0 }}>"{selected.translation}"</p>
             </div>

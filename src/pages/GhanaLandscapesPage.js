@@ -440,8 +440,20 @@ export default function GhanaLandscapesPage() {
     else audio.pause();
   }, [activeTab, soundOn, sound.src]);
 
+  // Start playback inside the user gesture — mobile browsers (iOS) block
+  // audio.play() that isn't directly triggered by a tap.
+  function startSoundFromGesture() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.src) audio.src = sound.src;
+    audio.volume = 0.28;
+    audio.loop = true;
+    audio.play().catch(() => {});
+  }
+
   function handleAllowSound() {
     localStorage.setItem(SOUND_PERMISSION_KEY, 'granted');
+    startSoundFromGesture();
     setSoundOn(true);
     setShowSoundModal(false);
   }
@@ -458,6 +470,16 @@ export default function GhanaLandscapesPage() {
         .landscape-tab { transition: all 0.2s ease; }
         .landscape-tab:hover { background: rgba(255,255,255,0.06) !important; }
         .landscape-item-btn:hover { border-color: rgba(255,255,255,0.25) !important; }
+        .landscape-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }
+        .landscape-items { display: flex; flex-direction: column; gap: 6px; }
+        @media (max-width: 768px) {
+          .landscape-layout { grid-template-columns: 1fr; gap: 16px; }
+          .landscape-items {
+            flex-direction: row; overflow-x: auto; gap: 8px;
+            padding-bottom: 8px; -webkit-overflow-scrolling: touch;
+          }
+          .landscape-items > button { flex: 0 0 auto; min-width: 160px; }
+        }
       `}</style>
 
       {showSoundModal && (
@@ -518,7 +540,7 @@ export default function GhanaLandscapesPage() {
 
           {/* Sound toggle */}
           <button
-            onClick={() => setSoundOn(s => !s)}
+            onClick={() => { if (!soundOn) startSoundFromGesture(); setSoundOn(s => !s); }}
             style={{
               marginLeft: 'auto',
               background: soundOn ? 'rgba(90,158,106,0.15)' : 'rgba(255,255,255,0.03)',
@@ -535,10 +557,10 @@ export default function GhanaLandscapesPage() {
         </div>
 
         {/* Main layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 20, alignItems: 'start' }}>
+        <div className="landscape-layout">
 
           {/* Item list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="landscape-items">
             {tab.data.map((d, i) => (
               <button
                 key={i}

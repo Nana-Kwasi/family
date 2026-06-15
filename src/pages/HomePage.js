@@ -6,56 +6,16 @@ import TestimonialsSection from '../components/ui/TestimonialsSection';
 
 const pi = (file) => encodeURI(`/images/${file}`);
 
-// ─── All marketing images for the hero carousel ──────────────────────────────
+// ─── Commercial campaign images for the hero carousel ────────────────────────
+// The full campaign storyboard shows first (rendered in full), followed by the
+// six single banners. Each image already carries its own headline/CTA artwork,
+// so the carousel adds no overlaid text.
 const HERO_SLIDES = [
-  // Group / Event shots — highest impact
-  { src: pi('group of day borns.jpeg'),                                          label: 'Akan Heritage',       title: 'Wear Your Day Name. Carry Your Legacy.',              sub: 'Premium heritage clothing for the Akan day-born community.' },
-  { src: pi('all white day borns naming ceremony.jpeg'),                         label: 'Naming Ceremony',     title: 'Dressed for Life\'s Most Sacred Moments',             sub: 'Heritage T-shirts crafted for naming ceremonies and milestones.' },
-  { src: pi('group of men and women wearing white t shirt day born.jpeg'),       label: 'For Everyone',        title: 'The Whole Family. One Heritage.',                      sub: 'Day-born shirts for men, women, and children — premium cotton.' },
-  { src: pi('child dedication of parents wearing day borns white t shirt.jpeg'), label: 'Family Heritage',     title: 'Every Milestone, Beautifully Dressed',                sub: 'From child dedications to everyday wear — your heritage, always.' },
-  { src: pi('naming ceremony white t shirt day borns .jpeg'),                    label: 'Day Born Collection', title: 'Your Name. Your Culture. Your Gift.',                  sub: 'Authentic Akan day-born designs worn with pride.' },
-  { src: pi('naming ceremony group picture(kwame and Ama).jpeg'),                label: 'Kwame & Ama',         title: 'Saturday Born. Beautifully Celebrated.',               sub: 'Day-born heritage sets for couples and families.' },
-  { src: pi('ama and kwame t shirt under naming ceremony.jpeg'),                 label: 'Naming Ceremony',     title: 'The Gift They\'ll Cherish Forever',                   sub: 'Personalised day-born prints — the perfect cultural gift.' },
-  // Kids / Family — emotional impact
-  { src: pi('kid yaw.jpeg'),                                                     label: 'Thursday Born',       title: 'Kid Yaw — Thursday Born',                             sub: 'Heritage starts young. Day-born gifts for the little ones.' },
-  { src: pi('kid kwadwo.jpeg'),                                                  label: 'Monday Born',         title: 'Kid Kwadwo — Monday Born',                            sub: 'Softly dressed. Proudly named.' },
-  { src: pi('kid afia.jpeg'),                                                    label: 'Friday Born',         title: 'Kid Afia — Friday Born',                              sub: 'Wearing her name from day one.' },
-  { src: pi('kid adwoa.jpeg'),                                                   label: 'Monday Born',         title: 'Kid Adwoa — Monday Born',                             sub: 'Soft fabric. Lasting pride.' },
-  // T-shirts
-  { src: pi('adwoa black t shirt.jpeg'),                                         label: 'T-Shirt',             title: 'Adwoa Monday Born — Black',                           sub: 'Premium Adinkra print · Black colourway.' },
-  { src: pi('yaw men blue t.shirt.jpeg'),                                        label: 'T-Shirt',             title: 'Yaw Thursday Born — Blue',                            sub: 'Heritage meets modern style.' },
-  { src: pi('kwaku white t shirt.jpeg'),                                         label: 'T-Shirt',             title: 'Kwaku Wednesday Born — White',                        sub: 'Clean. Premium. Gift-ready.' },
-  { src: pi('afia day born white t shirt.jpeg'),                                 label: 'T-Shirt',             title: 'Afia Friday Born — White',                            sub: 'Soft premium cotton · Heritage Adinkra symbol.' },
-  { src: pi('akosua t shirt blue color.jpeg'),                                   label: 'T-Shirt',             title: 'Akosua Sunday Born — Blue',                           sub: 'Bold colour · Cultural heritage.' },
-  { src: pi('kofi t shirt white.jpeg'),                                          label: 'T-Shirt',             title: 'Kofi Friday Born — White',                            sub: 'Premium print · Sankofa symbol.' },
-  { src: pi('kwame black t shirt.jpeg'),                                         label: 'T-Shirt',             title: 'Kwame Saturday Born — Black',                         sub: 'Strong. Heritage. Gift-ready.' },
-  { src: pi('kwadwo day born black t shirt.jpeg'),                               label: 'T-Shirt',             title: 'Kwadwo Monday Born — Black',                          sub: 'Premium Adinkra design · Monday-born heritage.' },
-  { src: pi('kwabena day born white t shirt.jpeg'),                              label: 'T-Shirt',             title: 'Kwabena Tuesday Born — White',                        sub: 'White colourway · Sankofa symbol on back.' },
-  { src: pi('ama day born  black t.shirt.jpeg'),                                 label: 'T-Shirt',             title: 'Ama Saturday Born — Black',                           sub: 'Bold colourway · Heritage Adinkra design.' },
-  { src: pi('yaa gray t shirtsss.jpeg'),                                         label: 'T-Shirt',             title: 'Yaa Thursday Born — Gray',                            sub: 'Neutral tone · Heritage print.' },
-  { src: pi('yaa gray t shirts.jpeg'),                                           label: 'T-Shirt',             title: 'Yaa Thursday Born Collection',                        sub: 'Multiple styles · Heritage Adinkra prints.' },
-  // Baby Bodysuits
-  { src: pi('toddler abena cream baby suit.jpeg'),                               label: 'Baby Bodysuit',       title: 'Abena — Cream Baby Bodysuit',                         sub: 'Soft. Heritage. Perfect for the newest Tuesday-born.' },
-  { src: pi('toddler kofi blue baby suit.jpeg'),                                 label: 'Baby Bodysuit',       title: 'Kofi — Blue Baby Bodysuit',                           sub: 'Snap-button closure · Heritage Adinkra print.' },
-  { src: pi('kwame kid red babysuit-0.jpeg'),                                    label: 'Baby Bodysuit',       title: 'Kwame — Red Baby Bodysuit',                           sub: 'Bold. Adorable. Gift-ready.' },
-  { src: pi('kwame day born cream babysuit.jpeg'),                               label: 'Baby Bodysuit',       title: 'Kwame Saturday Born — Cream',                         sub: 'Soft cream colourway · Heritage design.' },
-  { src: pi('toddler white kwasy day born babysuit.jpeg'),                       label: 'Baby Bodysuit',       title: 'Kwasi Sunday Born — White',                           sub: 'Classic white · Premium baby bodysuit.' },
-  { src: pi('akosua day born voilet babysuit.jpeg'),                             label: 'Baby Bodysuit',       title: 'Akosua Sunday Born — Violet',                         sub: 'Beautiful violet colourway · Heritage print.' },
-  { src: pi('red akua day born babysuit.jpeg'),                                  label: 'Baby Bodysuit',       title: 'Akua Wednesday Born — Red',                           sub: 'Vibrant red · Heritage Adinkra design.' },
-  { src: pi('kwaku day born red babysuit.jpeg'),                                 label: 'Baby Bodysuit',       title: 'Kwaku Wednesday Born — Red',                          sub: 'Soft. Bold. Perfect gift.' },
-  { src: pi('yellow ama day born babysuit.jpeg'),                                label: 'Baby Bodysuit',       title: 'Ama Saturday Born — Yellow',                          sub: 'Warm yellow · Heritage baby bodysuit.' },
-  // Mugs
-  { src: pi('afia mug-0.jpeg'),                                                  label: 'Heritage Mug',        title: 'Afia Friday Born Mug',                                sub: 'Premium ceramic · Adinkra symbol · Perfect gift.' },
-  { src: pi('kofi cup-0.jpeg'),                                                  label: 'Heritage Mug',        title: 'Kofi Friday Born Mug',                                sub: 'Daily heritage ritual. One mug at a time.' },
-  { src: pi('kofi-cup.jpeg'),                                                    label: 'Heritage Mug',        title: 'Kofi Day Born — Cup',                                 sub: 'Quality ceramic · Dishwasher safe · Gift-ready.' },
-  // Real community photos
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.01.jpeg'),                       label: 'Community',           title: 'Real People. Real Pride.',                            sub: 'Join thousands celebrating their Akan day-born identity.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.11.jpeg'),                       label: 'Community',           title: 'Heritage Worn Every Day',                             sub: 'Our community wears their culture with pride.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.20 (1).jpeg'),                   label: 'Day Born',            title: 'Your Name. Your Culture.',                            sub: 'Authentic Akan heritage designs.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.20 (2).jpeg'),                   label: 'Day Born',            title: 'Premium Heritage Gifting',                            sub: 'Thoughtfully made. Meaningfully given.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.27 (1).jpeg'),                   label: 'Heritage',            title: 'Crafted with Culture',                                sub: 'Every piece tells a story of your day-born identity.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.30 (1).jpeg'),                   label: 'Day Born',            title: 'Discover Your Akan Name',                             sub: 'Born on a specific day? You carry a heritage name.' },
-  { src: pi('WhatsApp Image 2026-06-01 at 12.51.32 (2).jpeg'),                   label: 'Community',           title: 'Wear Your Heritage',                                  sub: 'Premium day-born gifts for the whole family.' },
+  { src: pi('commercial-images/mama africa website commercial.png') },
+  { src: pi('commercial-images/mama africa commercial pt 2 image 1.png') },
+  { src: pi('commercial-images/mama affrica commercial image 4 revised.png') },
+  { src: pi('commercial-images/Website image 5.png') },
+  { src: pi('commercial-images/website commercial image 6.png') },
 ];
 
 const TOTAL = HERO_SLIDES.length;
@@ -95,7 +55,7 @@ function HeroCarousel() {
 
   return (
     <div
-      style={{ position: 'relative', width: '100%', height: 'clamp(480px, 72vh, 860px)', overflow: 'hidden', background: '#0a0602', userSelect: 'none' }}
+      style={{ position: 'relative', width: '100%', aspectRatio: '3 / 2', maxHeight: 'min(860px, 82vh)', overflow: 'hidden', background: '#0a0602', userSelect: 'none' }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -114,68 +74,33 @@ function HeroCarousel() {
       <img
         key={current}
         src={slide.src}
-        alt={slide.title}
+        alt="Mama Africa Official — Akan day-born heritage"
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%',
-          objectFit: 'cover', objectPosition: 'center 30%',
+          objectFit: 'cover', objectPosition: 'top center',
           animation: 'heroFadeIn 0.85s ease forwards',
           display: 'block',
         }}
       />
 
-      {/* Gradient overlay */}
+      {/* Bottom scrim — keeps the controls legible without covering the artwork */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to top, rgba(5,2,1,0.96) 0%, rgba(8,4,2,0.68) 38%, rgba(8,4,2,0.22) 68%, rgba(8,4,2,0.06) 100%)',
+        background: 'linear-gradient(to top, rgba(5,2,1,0.82) 0%, rgba(8,4,2,0.32) 22%, rgba(8,4,2,0) 46%)',
         pointerEvents: 'none',
       }} />
 
-      {/* Top-left category badge */}
-      <div style={{ position: 'absolute', top: 22, left: 24, zIndex: 3 }}>
-        <span style={{
-          fontFamily: "'Montserrat', sans-serif", fontSize: 10, fontWeight: 700,
-          letterSpacing: '0.18em', textTransform: 'uppercase',
-          color: '#1C0E04', background: 'rgba(229,192,123,0.95)',
-          borderRadius: 50, padding: '5px 14px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-        }}>
-          {slide.label}
-        </span>
-      </div>
-
-      {/* Bottom content overlay */}
+      {/* Bottom controls overlay */}
       <div
         key={`text-${current}`}
         style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3,
-          padding: 'clamp(24px,4vw,52px) clamp(20px,5vw,72px)',
+          padding: 'clamp(20px,4vw,44px) clamp(20px,5vw,72px)',
           animation: 'heroTextIn 0.7s ease 0.15s both',
         }}
       >
-        <h1 style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: 'clamp(26px, 3.8vw, 52px)',
-          color: '#FAF0E0', fontWeight: 700,
-          lineHeight: 1.15, marginBottom: 10,
-          textShadow: '0 3px 16px rgba(0,0,0,0.9)',
-          maxWidth: 700,
-        }}>
-          {slide.title}
-        </h1>
-        <p style={{
-          fontFamily: "'Montserrat', sans-serif",
-          fontSize: 'clamp(13px, 1.4vw, 17px)',
-          color: 'rgba(245,228,200,0.88)',
-          lineHeight: 1.65, marginBottom: 24,
-          maxWidth: 520,
-          textShadow: '0 2px 10px rgba(0,0,0,0.85)',
-          letterSpacing: '0.02em',
-        }}>
-          {slide.sub}
-        </p>
-
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 28 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 22 }}>
           <button
             className="btn-gold"
             onClick={() => { trackEvent('hero_shop_click', { slide: current }); navigate('/store'); }}
@@ -262,7 +187,6 @@ const CATEGORIES = [
   { label: 'T-Shirts', img: pi('group of men and women wearing white t shirt day born.jpeg'), filter: 'T-Shirts' },
   { label: 'Baby Bodysuits', img: pi('toddler abena cream baby suit.jpeg'), filter: 'Babysuits' },
   { label: 'Mugs', img: pi('Akosua Sunday Born Mug.png'), filter: 'Mugs' },
-  { label: 'Hoodies', img: pi('new kwabena and abena hoodie.png'), filter: 'Hoodies' },
 ];
 
 function ShopByCategory() {

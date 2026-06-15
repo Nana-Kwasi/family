@@ -242,6 +242,17 @@ function drawFourCornersWithSymbols(ctx, imgA, imgB, x, y, w, h, size = 72, inse
   if (imgA?.width) drawFittedImage(ctx, imgA, x + w - inset - size, y + h - inset - size, size, size);
 }
 
+/** Condense a long passage into a short, clean summary for the certificate. */
+function summarizeText(text, maxChars = 200) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxChars) return clean;
+  const window = clean.slice(0, maxChars);
+  const sentenceEnd = Math.max(window.lastIndexOf('. '), window.lastIndexOf('; '));
+  if (sentenceEnd > 90) return window.slice(0, sentenceEnd + 1).trim();
+  const lastSpace = window.lastIndexOf(' ');
+  return `${window.slice(0, lastSpace > 0 ? lastSpace : maxChars).trim()}…`;
+}
+
 function fillTextWrappedCenter(ctx, text, cx, startY, maxW, lineHeight) {
   const words = String(text).split(/\s+/);
   let line = '';
@@ -267,8 +278,7 @@ function fillTextWrappedCenter(ctx, text, cx, startY, maxW, lineHeight) {
 async function loadCertificateFonts() {
   await document.fonts.ready;
   const specs = [
-    '400 72px "Great Vibes"',
-    '400 96px "Great Vibes"',
+    '700 118px "Playfair Display"',
     '600 16px Cinzel',
     '600 14px Cinzel',
     'italic 400 20px "EB Garamond"',
@@ -638,8 +648,9 @@ async function generateNamingCertificate(name, day, dateDisplay, gender, data, b
     : nameGreen;
   y += 54;
   ctx.fillStyle = nameColor;
-  ctx.font = '400 146px "Great Vibes", "Brush Script MT", cursive';
-  ctx.fillText(name, cx, y);
+  ctx.font = '700 118px "Playfair Display", "Times New Roman", Georgia, serif';
+  const properName = String(name || '').charAt(0).toUpperCase() + String(name || '').slice(1).toLowerCase();
+  ctx.fillText(properName, cx, y);
   y += 88;
 
   ctx.font = '600 20px Cinzel, Palatino, serif';
@@ -662,7 +673,7 @@ async function generateNamingCertificate(name, day, dateDisplay, gender, data, b
 
   ctx.font = 'italic 400 20px "EB Garamond", Garamond, serif';
   ctx.fillStyle = ink;
-  y = fillTextWrappedCenter(ctx, String(data.origin || '').slice(0, 320), cx, y, sectionWidth, 30);
+  y = fillTextWrappedCenter(ctx, summarizeText(data.origin, 200), cx, y, sectionWidth, 30);
   y += 18;
 
   ctx.fillStyle = titleBrown;

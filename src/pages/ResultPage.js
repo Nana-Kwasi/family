@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import dayBorns from '../data/akanDayBorns.json';
@@ -99,7 +99,6 @@ function getShareUrl() {
 
 export default function ResultPage() {
   const [shareNotice, setShareNotice] = useState('');
-  const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [certPreviewOpen, setCertPreviewOpen] = useState(false);
   const [certLoading, setCertLoading] = useState(false);
   const [certDataUrl, setCertDataUrl] = useState('');
@@ -107,11 +106,11 @@ export default function ResultPage() {
   const [certStepIndex, setCertStepIndex] = useState(-1);
   const [certVariant, setCertVariant] = useState(CERT_VARIANTS.NAMING_ADINKRA);
   const [showCertOptions, setShowCertOptions] = useState(false);
+  const [samplePreviews, setSamplePreviews] = useState({});
   const [premiumUnlocked, setPremiumUnlocked] = useState(false);
   const [showPremiumGate, setShowPremiumGate] = useState(false);
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const shareMenuRef = useRef(null);
   const dob = params.get('dob');
   const gender = params.get('gender') || 'female';
   const day = dob ? getDay(dob) : null;
@@ -135,15 +134,6 @@ export default function ResultPage() {
   }, [day, dayBornPrimary]);
 
   useEffect(() => {
-    if (!shareMenuOpen) return undefined;
-    const closeOnOutsideClick = (event) => {
-      if (!shareMenuRef.current?.contains(event.target)) setShareMenuOpen(false);
-    };
-    document.addEventListener('mousedown', closeOnOutsideClick);
-    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
-  }, [shareMenuOpen]);
-
-  useEffect(() => {
     if (!dob) return;
     confetti({ particleCount: 120, spread: 80, colors: ['#C9A558', '#E8CB82', '#f5d966', '#ffffff'] });
   }, [dob]);
@@ -153,7 +143,34 @@ export default function ResultPage() {
     setCertError('');
   }, [dob, gender, certVariant]);
 
+  // Clear generated style previews whenever the underlying identity changes.
+  useEffect(() => {
+    setSamplePreviews({});
+  }, [dob, gender]);
+
   const name = dob && data ? (data[gender] || data.female) : null;
+
+  // Build the selectable style samples as live certificates of THIS user's day born.
+  useEffect(() => {
+    if (!showCertOptions || !name || !data || !dob) return undefined;
+    let cancelled = false;
+    const dateDisplayLocal = new Date(dob + 'T12:00:00')
+      .toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    (async () => {
+      for (let i = 0; i < CERT_STYLE_SAMPLES.length; i += 1) {
+        const sample = CERT_STYLE_SAMPLES[i];
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const url = await generateCertificateDataUrl(name, day, dateDisplayLocal, gender, data, sample.variant);
+          if (cancelled) return;
+          if (url) setSamplePreviews((prev) => ({ ...prev, [sample.variant]: url }));
+        } catch {
+          /* preview generation failed — placeholder stays */
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showCertOptions, name, day, gender, data, dob]);
 
   useSEO({
     title: name ? `Your Akan Name is ${name} — ${day} Born` : 'Discover Your Akan Day Name',
@@ -290,46 +307,6 @@ export default function ResultPage() {
     }
   }
 
-  async function handleShareChannel(channel) {
-    const text = `My Akan day name is ${name} — I was born on a ${day}. ${data.planet}. Discover yours with Mama Africa Official!`;
-    const { url, isLocalWithoutPublic } = getShareUrl();
-    if (isLocalWithoutPublic) {
-      setShareNotice('This link is local-only. Set REACT_APP_PUBLIC_SITE_URL to share a phone-accessible link.');
-    } else {
-      setShareNotice('');
-    }
-
-    const encodedText = encodeURIComponent(text);
-    const encodedUrl = encodeURIComponent(url);
-    const encodedSubject = encodeURIComponent(`My Akan Name is ${name}!`);
-    const links = {
-      whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
-      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      x: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
-      pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-      email: `mailto:?subject=${encodedSubject}&body=${encodedText}%0A%0A${encodedUrl}`,
-    };
-
-    setShareMenuOpen(false);
-
-    if (channel === 'instagram' || channel === 'tiktok') {
-      const fullMessage = `${text}\n${url}`;
-      if (navigator.share) {
-        navigator.share({ title: `My Akan Name is ${name}!`, text, url }).catch(() => {});
-        return;
-      }
-      await navigator.clipboard.writeText(fullMessage);
-      window.open(channel === 'instagram' ? 'https://www.instagram.com/' : 'https://www.tiktok.com/', '_blank', 'noopener,noreferrer');
-      setShareNotice(`Copied your share text. Paste it in ${channel === 'instagram' ? 'Instagram' : 'TikTok'} to post.`);
-      return;
-    }
-
-    const target = links[channel];
-    if (target) window.open(target, '_blank', 'noopener,noreferrer');
-  }
-
   return (
     <div className="page-wrapper">
       {/* Name reveal hero */}
@@ -341,16 +318,11 @@ export default function ResultPage() {
         <div className="result-day-badge">{day}-born · {dateDisplay}</div>
         <div className="result-name-display">{name}</div>
         <p className="result-day-sub">
-          {gender === 'female' ? '♀ Female' : '♂ Male'} · Born on {day} · {data.planet}
+          {gender === 'female' ? '♀ Female' : '♂ Male'} · Born on {day}
         </p>
         <p style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(13px, 2vw, 16px)', color: '#C9A558', letterSpacing: '0.12em', marginBottom: 24 }}>
           Age {age}
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-          <span className="tag-pill">{data.color}</span>
-          <span className="tag-pill">{data.symbol} {data.planet}</span>
-        </div>
-
         {/* Birthday wish card */}
         <div style={{
           maxWidth: 560, margin: '0 auto',
@@ -432,19 +404,44 @@ export default function ResultPage() {
                         Unlocked
                       </span>
                     )}
-                    <img
-                      src={s.src}
-                      alt=""
-                      loading="lazy"
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: 6,
-                        display: 'block',
-                        aspectRatio: '16 / 10',
-                        objectFit: 'cover',
-                      }}
-                    />
+                    {samplePreviews[s.variant] ? (
+                      <img
+                        src={samplePreviews[s.variant]}
+                        alt={`${name} — ${s.title} certificate preview`}
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          borderRadius: 6,
+                          display: 'block',
+                          aspectRatio: '16 / 10',
+                          objectFit: 'contain',
+                          background: '#F8F3E8',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '100%',
+                          aspectRatio: '16 / 10',
+                          borderRadius: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textAlign: 'center',
+                          padding: 8,
+                          background: 'rgba(201,165,88,0.06)',
+                          border: '1px dashed rgba(201,165,88,0.25)',
+                          color: '#9E7D42',
+                          fontFamily: "'Cinzel', serif",
+                          fontSize: 10,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Preparing {name}&rsquo;s<br />{s.title} certificate…
+                      </div>
+                    )}
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: '#C9A558', marginTop: 8, letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.3 }}>
                       {s.title}
                     </div>
@@ -539,77 +536,6 @@ export default function ResultPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             {certDataUrl ? 'Share Certificate on WhatsApp' : 'Share on WhatsApp'}
           </button>
-          <div ref={shareMenuRef} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShareMenuOpen((open) => !open)}
-              style={{
-                background: 'rgba(201,165,88,0.08)',
-                color: '#E8CB82',
-                border: '1px solid rgba(201,165,88,0.35)',
-                borderRadius: 999,
-                padding: '9px 16px',
-                fontFamily: "'Cinzel', serif",
-                fontSize: 11,
-                letterSpacing: '0.09em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                minWidth: 140,
-              }}
-            >
-              More Channels
-            </button>
-            {shareMenuOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 230,
-                  background: '#120b06',
-                  border: '1px solid rgba(201,165,88,0.35)',
-                  borderRadius: 12,
-                  padding: 8,
-                  zIndex: 40,
-                  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
-                }}
-              >
-                {[
-                  { id: 'whatsapp', label: 'WhatsApp' },
-                  { id: 'x', label: 'X' },
-                  { id: 'tiktok', label: 'TikTok' },
-                  { id: 'instagram', label: 'Instagram' },
-                  { id: 'pinterest', label: 'Pinterest' },
-                  { id: 'telegram', label: 'Telegram' },
-                  { id: 'facebook', label: 'Facebook' },
-                  { id: 'email', label: 'Email' },
-                  { id: 'linkedin', label: 'LinkedIn' },
-                ].map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => handleShareChannel(s.id)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      background: 'transparent',
-                      color: '#E8CB82',
-                      border: '1px solid rgba(201,165,88,0.2)',
-                      borderRadius: 8,
-                      padding: '8px 10px',
-                      fontFamily: "'Cinzel', serif",
-                      fontSize: 11,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      cursor: 'pointer',
-                      marginBottom: 6,
-                    }}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
           </div>
           {!certDataUrl && (
             <p style={{ color: '#5C4433', fontSize: 12, marginTop: 2, fontStyle: 'italic' }}>

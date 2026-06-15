@@ -171,16 +171,31 @@ export default function VillageExperiencePage() {
     else vid.pause();
   }, [playing]);
 
+  // Start media inside the user gesture — mobile browsers (iOS) block
+  // play() that isn't directly triggered by a tap, which is why the
+  // documentary had no sound on mobile.
+  function startSoundFromGesture() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.src) audio.src = scene.sound;
+    audio.volume = 0.28;
+    audio.loop = true;
+    audio.play().catch(() => {});
+  }
+
   function handleStart() {
     setStarted(true);
     setPlaying(true);
+    const vid = videoRef.current;
+    if (vid) vid.play().catch(() => {});
     const perm = localStorage.getItem(SOUND_PERMISSION_KEY);
-    if (perm === 'granted') setSoundOn(true);
+    if (perm === 'granted') { startSoundFromGesture(); setSoundOn(true); }
     else if (perm !== 'denied') setShowSoundModal(true);
   }
 
   function handleAllowSound() {
     localStorage.setItem(SOUND_PERMISSION_KEY, 'granted');
+    startSoundFromGesture();
     setSoundOn(true);
     setShowSoundModal(false);
   }
@@ -341,7 +356,7 @@ export default function VillageExperiencePage() {
           </button>
 
           {/* Sound toggle */}
-          <button className="ctrl-btn" onClick={() => setSoundOn(s => !s)} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', border: `1px solid ${soundOn ? 'rgba(90,158,106,0.55)' : 'rgba(255,255,255,0.18)'}`, borderRadius: '50%', width: 40, height: 40, color: soundOn ? '#5a9e6a' : 'rgba(255,255,255,0.45)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+          <button className="ctrl-btn" onClick={() => { if (!soundOn) startSoundFromGesture(); setSoundOn(s => !s); }} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', border: `1px solid ${soundOn ? 'rgba(90,158,106,0.55)' : 'rgba(255,255,255,0.18)'}`, borderRadius: '50%', width: 40, height: 40, color: soundOn ? '#5a9e6a' : 'rgba(255,255,255,0.45)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
             {soundOn ? '🔊' : '🔇'}
           </button>
         </div>
