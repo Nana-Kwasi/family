@@ -20,6 +20,7 @@ import AdminStoriesPage from './pages/AdminStoriesPage';
 import CultureHubPage from './pages/CultureHubPage';
 import VillageExperiencePage from './pages/VillageExperiencePage';
 import GhanaLandscapesPage from './pages/GhanaLandscapesPage';
+import GhanaianFoodsPage from './pages/GhanaianFoodsPage';
 import AdinkraPage from './pages/AdinkraPage';
 import TwiPage from './pages/TwiPage';
 import ClansPage from './pages/ClansPage';
@@ -96,6 +97,7 @@ function AppShell() {
           <Route path="/culture" element={<CultureHubPage />} />
           <Route path="/culture/village" element={<VillageExperiencePage />} />
           <Route path="/culture/landscapes" element={<GhanaLandscapesPage />} />
+          <Route path="/culture/foods" element={<GhanaianFoodsPage />} />
           <Route path="/culture/adinkra" element={<AdinkraPage />} />
           <Route path="/culture/twi" element={<TwiPage />} />
           <Route path="/culture/clans" element={<ClansPage />} />

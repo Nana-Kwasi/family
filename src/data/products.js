@@ -91,6 +91,7 @@ function inferTypeAndLabel(file) {
   return { type: 'hoodie', label: 'Hoodie' };
 }
 
+// eslint-disable-next-line no-unused-vars -- legacy catalog kept for reference
 const legacyProducts = CATALOG_FILES.map((file, i) => {
   const { type, label } = inferTypeAndLabel(file);
   const bornDay = inferBornDayFromFilename(file);
@@ -136,6 +137,7 @@ const HOODIE_BASE = {
 };
 
 // ─── INDIVIDUAL DAY-BORN PRODUCTS (IDs 25+) ─────────────────────────────────
+// eslint-disable-next-line no-unused-vars -- previous catalog kept for reference; Amazon catalog is active
 const INDIVIDUAL_PRODUCTS = [
 
   // ════════════════════════════════════════════════════════════
@@ -801,38 +803,637 @@ const INDIVIDUAL_PRODUCTS = [
   },
 ];
 
-// legacyProducts excluded — contains Mother's Day items, hoodie combos, tumbler, no Etsy links
-// Re-add legacyProducts to the array below when needed for seasonal campaigns
-export const products = [...INDIVIDUAL_PRODUCTS].filter((p) => !p.hidden);
+// ─── ACTIVE AMAZON CATALOG ───────────────────────────────────────────────────
+// Previous product images are commented out. The store, name generator, About
+// page and home pop-up use the day-born product images below, sold on Amazon.
+const AMAZON_PRODUCTS = [
+  // ── Sunday — Akosua ──────────────────────────────────────────────────────
+  {
+    id: 201, name: 'Akosua Sunday Born Shirt — Gye Nyame Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Royal blue · Gye Nyame back',
+    description: 'Premium heritage T-shirt for Akosua, the Sunday-born. Royal blue colourway with the AKOSUA day-born print on the front and the Gye Nyame Adinkra symbol on the back.',
+    image: pi('sunday-borns/akosua/akosua-shirt-gyenyame-1.png'),
+    images: [
+      pi('sunday-borns/akosua/akosua-shirt-gyenyame-1.png'),
+      pi('sunday-borns/akosua/akosua-shirt-gyenyame-3.png'),
+      pi('sunday-borns/akosua/akosua-shirt-gyenyame-4.png'),
+      pi('sunday-borns/akosua/akosua-shirt-gyenyame-2.jpg'),
+    ],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58WLSV2?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Monday — Kojo / Kwadwo & Adwoa / Adjoa ───────────────────────────────
+  {
+    id: 210, name: 'Kojo Monday Born Shirt — Sankofa Back', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Navy · Sankofa back',
+    description: 'Premium heritage T-shirt for Kojo (Kwadwo), the Monday-born. Navy colourway with the KOJO day-born print on the front and the Sankofa Adinkra symbol on the back.',
+    image: pi('monday-borns/kwadwo/kojo-shirt-sankofa-1.png'),
+    images: [pi('monday-borns/kwadwo/kojo-shirt-sankofa-1.png'), pi('monday-borns/kwadwo/kojo-shirt-sankofa-2.jpg'), pi('monday-borns/kwadwo/kojo-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H2WZXCNJ?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 211, name: 'Kojo Monday Born Shirt — Gye Nyame Back', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Navy · Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kojo (Kwadwo), the Monday-born. Navy colourway with the KOJO day-born print on the front and the Gye Nyame Adinkra symbol on the back.',
+    image: pi('monday-borns/kwadwo/kojo-shirt-gyenyame-1.jpeg'),
+    images: [pi('monday-borns/kwadwo/kojo-shirt-gyenyame-1.jpeg'), pi('monday-borns/kwadwo/kojo-shirt-gyenyame-2.jpg'), pi('monday-borns/kwadwo/kojo-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3HQ78MQ?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 212, name: 'Adwoa Monday Born Female Shirt', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: "Women's cut · Sankofa & Gye Nyame",
+    description: 'Premium heritage T-shirt for Adwoa (Adjoa), the Monday-born. Fitted women’s cut with the ADWOA day-born print and your choice of Sankofa or Gye Nyame Adinkra symbol on the back.',
+    image: pi('monday-borns/adwoa/adwoa-shirt-1.png'),
+    images: [pi('monday-borns/adwoa/adwoa-shirt-1.png'), pi('monday-borns/adwoa/adwoa-shirt-2.png'), pi('monday-borns/adwoa/adwoa-shirt-3.png'), pi('monday-borns/adwoa/adwoa-shirt-4.png'), pi('monday-borns/adwoa/adwoa-shirt-5.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3HRDYFV?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 213, name: 'Kojo Monday Born Baby Bodysuit', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Soft cotton · Infant bodysuit',
+    description: 'Personalized heritage infant bodysuit for Kojo (Kwadwo), the Monday-born baby. Soft, premium cotton with the KOJO day-born print.',
+    image: pi('monday-borns/kwadwo/kojo-baby-1.png'),
+    images: [pi('monday-borns/kwadwo/kojo-baby-1.png'), pi('monday-borns/kwadwo/kojo-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5DCV76Z?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 214, name: 'Adjoa Monday Born Baby Bodysuit', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Soft cotton · Infant bodysuit',
+    description: 'Personalized heritage infant bodysuit for Adjoa (Adwoa), the Monday-born baby. Soft, premium cotton with the ADJOA day-born print.',
+    image: pi('monday-borns/adwoa/adjoa-baby-1.png'),
+    images: [pi('monday-borns/adwoa/adjoa-baby-1.png'), pi('monday-borns/adwoa/adjoa-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5B2JGBB', ...BABYSUIT_BASE,
+  },
+  {
+    id: 215, name: 'Adwoa Monday Born Mug — Sankofa', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Adwoa, the Monday-born. Features the ADWOA name with the Sankofa Adinkra symbol — a meaningful daily-use gift.',
+    image: pi('monday-borns/adwoa/adwoa-mug-sankofa-card.png'),
+    images: [pi('monday-borns/adwoa/adwoa-mug-sankofa-card.png'), pi('monday-borns/adwoa/adwoa-mug-sankofa-3.png'), pi('monday-borns/adwoa/adwoa-mug-sankofa-2.jpg'), pi('monday-borns/adwoa/adwoa-mug-sankofa-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BN6MN7?th=1', ...MUG_BASE,
+  },
+  {
+    id: 216, name: 'Adwoa Monday Born Mug — Gye Nyame', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Adwoa, the Monday-born. Features the ADWOA name with the Gye Nyame Adinkra symbol — a meaningful daily-use gift.',
+    image: pi('monday-borns/adwoa/adwoa-mug-gyenyame-card.png'),
+    images: [pi('monday-borns/adwoa/adwoa-mug-gyenyame-card.png'), pi('monday-borns/adwoa/adwoa-mug-gyenyame-2.png'), pi('monday-borns/adwoa/adwoa-mug-gyenyame-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BN942Z?th=1', ...MUG_BASE,
+  },
+  {
+    id: 217, name: 'Kwadwo Monday Born Mug — Gye Nyame', bornDay: 'Monday',
+    tagline: 'Born on Monday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kwadwo, the Monday-born. Features the KWADWO name with the Gye Nyame Adinkra symbol — a meaningful daily-use gift.',
+    image: pi('monday-borns/kwadwo/kwadwo-mug-gyenyame-card.png'),
+    images: [pi('monday-borns/kwadwo/kwadwo-mug-gyenyame-card.png'), pi('monday-borns/kwadwo/kwadwo-mug-gyenyame-1.jpg'), pi('monday-borns/kwadwo/kwadwo-mug-gyenyame-2.png'), pi('monday-borns/kwadwo/kwadwo-mug-gyenyame-3.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BWBBT7', ...MUG_BASE,
+  },
+
+  // ── Tuesday — Abena & Kwabena ────────────────────────────────────────────
+  {
+    id: 220, name: 'Abena Tuesday Born Mug — Gye Nyame', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Abena, the Tuesday-born. Features the ABENA name with the Gye Nyame Adinkra symbol.',
+    image: pi('tuesday-borns/abena/abena-mug-gyenyame-card.png'),
+    images: [pi('tuesday-borns/abena/abena-mug-gyenyame-card.png'), pi('tuesday-borns/abena/abena-mug-gyenyame-2.jpg'), pi('tuesday-borns/abena/abena-mug-gyenyame-1.png'), pi('tuesday-borns/abena/abena-mug-gyenyame-3.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BZRNLK?th=1', ...MUG_BASE,
+  },
+  {
+    id: 221, name: 'Abena Tuesday Born Mug — Sankofa', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Abena, the Tuesday-born. Features the ABENA name with the Sankofa Adinkra symbol.',
+    image: pi('tuesday-borns/abena/abena-mug-sankofa-card.png'),
+    images: [pi('tuesday-borns/abena/abena-mug-sankofa-card.png'), pi('tuesday-borns/abena/abena-mug-sankofa-2.jpg'), pi('tuesday-borns/abena/abena-mug-sankofa-1.png'), pi('tuesday-borns/abena/abena-mug-sankofa-3.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BTRF98', ...MUG_BASE,
+  },
+  {
+    id: 222, name: 'Kwabena Tuesday Born Mug — Sankofa', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Kwabena, the Tuesday-born. Features the KWABENA name with the Sankofa Adinkra symbol.',
+    image: pi('tuesday-borns/kwabena/kwabena-mug-sankofa-card.png'),
+    images: [pi('tuesday-borns/kwabena/kwabena-mug-sankofa-card.png'), pi('tuesday-borns/kwabena/kwabena-mug-sankofa-3.jpg'), pi('tuesday-borns/kwabena/kwabena-mug-sankofa-1.png'), pi('tuesday-borns/kwabena/kwabena-mug-sankofa-2.png'), pi('tuesday-borns/kwabena/kwabena-mug-sankofa-4.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BR541V', ...MUG_BASE,
+  },
+  {
+    id: 223, name: 'Kwabena Tuesday Born Mug — Gye Nyame', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kwabena, the Tuesday-born. Features the KWABENA name with the Gye Nyame Adinkra symbol.',
+    image: pi('tuesday-borns/kwabena/kwabena-mug-gyenyame-card.png'),
+    images: [pi('tuesday-borns/kwabena/kwabena-mug-gyenyame-card.png'), pi('tuesday-borns/kwabena/kwabena-mug-gyenyame-3.png'), pi('tuesday-borns/kwabena/kwabena-mug-gyenyame-1.jpg'), pi('tuesday-borns/kwabena/kwabena-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BMG5X4', ...MUG_BASE,
+  },
+  {
+    id: 224, name: 'Kwabena Tuesday Born Baby Bodysuit', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Soft cotton · Infant bodysuit',
+    description: 'Personalized heritage infant bodysuit for Kwabena, the Tuesday-born baby. Soft, premium cotton with the KWABENA day-born print.',
+    image: pi('tuesday-borns/kwabena/kwabena-baby-1.png'),
+    images: [pi('tuesday-borns/kwabena/kwabena-baby-1.png'), pi('tuesday-borns/kwabena/kwabena-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5FN245C?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 225, name: 'Abena Tuesday Born Baby Bodysuit', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Soft cotton · Infant bodysuit',
+    description: 'Personalized heritage infant bodysuit for Abena, the Tuesday-born baby. Soft, premium cotton with the ABENA day-born print.',
+    image: pi('tuesday-borns/abena/abena-baby-1.png'),
+    images: [pi('tuesday-borns/abena/abena-baby-1.png'), pi('tuesday-borns/abena/abena-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5D5SZK4?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 226, name: 'Kwabena Tuesday Born Shirt — Gye Nyame Back', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. KWABENA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('tuesday-borns/kwabena/kwabena-shirt-gyenyame-1.png'),
+    images: [pi('tuesday-borns/kwabena/kwabena-shirt-gyenyame-1.png'), pi('tuesday-borns/kwabena/kwabena-shirt-gyenyame-2.jpg'), pi('tuesday-borns/kwabena/kwabena-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58N3JF6?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 227, name: 'Kwabena Tuesday Born Shirt — Sankofa Back', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kwabena, the Tuesday-born. KWABENA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('tuesday-borns/kwabena/kwabena-shirt-sankofa-1.png'),
+    images: [pi('tuesday-borns/kwabena/kwabena-shirt-sankofa-1.png'), pi('tuesday-borns/kwabena/kwabena-shirt-sankofa-2.jpg'), pi('tuesday-borns/kwabena/kwabena-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3J8K7NX?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 228, name: 'Abena Tuesday Born Shirt — Sankofa Back', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Abena, the Tuesday-born. ABENA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('tuesday-borns/abena/abena-shirt-sankofa-1.png'),
+    images: [pi('tuesday-borns/abena/abena-shirt-sankofa-1.png'), pi('tuesday-borns/abena/abena-shirt-sankofa-2.png'), pi('tuesday-borns/abena/abena-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3MPXCSF?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 229, name: 'Abena Tuesday Born Shirt — Gye Nyame Back', bornDay: 'Tuesday',
+    tagline: 'Born on Tuesday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Abena, the Tuesday-born. ABENA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('tuesday-borns/abena/abena-shirt-gyenyame-1.png'),
+    images: [pi('tuesday-borns/abena/abena-shirt-gyenyame-1.png'), pi('tuesday-borns/abena/abena-shirt-gyenyame-2.jpg'), pi('tuesday-borns/abena/abena-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3MVVT3V?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Wednesday — Akua & Kwaku ─────────────────────────────────────────────
+  {
+    id: 230, name: 'Akua Wednesday Born Mug — Gye Nyame', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Akua, the Wednesday-born. Features the AKUA name with the Gye Nyame Adinkra symbol.',
+    image: pi('wednesday-borns/akua/akua-mug-gyenyame-card.png'),
+    images: [pi('wednesday-borns/akua/akua-mug-gyenyame-card.png'), pi('wednesday-borns/akua/akua-mug-gyenyame-3.jpg'), pi('wednesday-borns/akua/akua-mug-gyenyame-1.png'), pi('wednesday-borns/akua/akua-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BM22NV', ...MUG_BASE,
+  },
+  {
+    id: 231, name: 'Akua Wednesday Born Mug — Sankofa', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Akua, the Wednesday-born. Features the AKUA name with the Sankofa Adinkra symbol.',
+    image: pi('wednesday-borns/akua/akua-mug-sankofa-card.png'),
+    images: [pi('wednesday-borns/akua/akua-mug-sankofa-card.png'), pi('wednesday-borns/akua/akua-mug-gyenyame-3.jpg'), pi('wednesday-borns/akua/akua-mug-sankofa-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BLBGRF', ...MUG_BASE,
+  },
+  {
+    id: 232, name: 'Kwaku Wednesday Born Mug — Sankofa', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Kwaku, the Wednesday-born. Features the KWAKU name with the Sankofa Adinkra symbol.',
+    image: pi('wednesday-borns/kwaku/kwaku-mug-sankofa-card.png'),
+    images: [pi('wednesday-borns/kwaku/kwaku-mug-sankofa-card.png'), pi('wednesday-borns/kwaku/kwaku-mug-sankofa-3.jpg'), pi('wednesday-borns/kwaku/kwaku-mug-sankofa-1.png'), pi('wednesday-borns/kwaku/kwaku-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BKJS7B', ...MUG_BASE,
+  },
+  {
+    id: 233, name: 'Kwaku Wednesday Born Mug — Gye Nyame', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kwaku, the Wednesday-born. Features the KWAKU name with the Gye Nyame Adinkra symbol.',
+    image: pi('wednesday-borns/kwaku/kwaku-mug-gyenyame-card.png'),
+    images: [pi('wednesday-borns/kwaku/kwaku-mug-gyenyame-card.png'), pi('wednesday-borns/kwaku/kwaku-mug-gyenyame-3.jpg'), pi('wednesday-borns/kwaku/kwaku-mug-gyenyame-1.png'), pi('wednesday-borns/kwaku/kwaku-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BLYVXY', ...MUG_BASE,
+  },
+  {
+    id: 234, name: 'Akua Wednesday Born Baby Onesie', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Akua, the Wednesday-born baby. Soft, premium cotton with the AKUA day-born print.',
+    image: pi('wednesday-borns/akua/akua-baby-1.png'),
+    images: [pi('wednesday-borns/akua/akua-baby-1.png'), pi('wednesday-borns/akua/akua-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59R8Y9K?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 235, name: 'Kwaku Wednesday Born Baby Onesie', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Kwaku, the Wednesday-born baby. Soft, premium cotton with the KWAKU day-born print.',
+    image: pi('wednesday-borns/kwaku/kwaku-baby-1.png'),
+    images: [pi('wednesday-borns/kwaku/kwaku-baby-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5CXKVSN?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 236, name: 'Akua Wednesday Born Shirt — Sankofa Back', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Akua, the Wednesday-born. AKUA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('wednesday-borns/akua/akua-shirt-sankofa-2.png'),
+    images: [pi('wednesday-borns/akua/akua-shirt-sankofa-2.png'), pi('wednesday-borns/akua/akua-shirt-sankofa-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3HZ5W8V?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 237, name: 'Akua Wednesday Born Shirt — Gye Nyame Back', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Akua, the Wednesday-born. AKUA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('wednesday-borns/akua/akua-shirt-gyenyame-2.png'),
+    images: [pi('wednesday-borns/akua/akua-shirt-gyenyame-2.png'), pi('wednesday-borns/akua/akua-shirt-gyenyame-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3J6QJ16?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 238, name: 'Kwaku Wednesday Born Shirt — Sankofa Back', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kwaku, the Wednesday-born. KWAKU day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('wednesday-borns/kwaku/kwaku-shirt-sankofa-2.png'),
+    images: [pi('wednesday-borns/kwaku/kwaku-shirt-sankofa-2.png'), pi('wednesday-borns/kwaku/kwaku-shirt-sankofa-3.jpg'), pi('wednesday-borns/kwaku/kwaku-shirt-sankofa-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58X1PW4?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 239, name: 'Kwaku Wednesday Born Shirt — Gye Nyame Back', bornDay: 'Wednesday',
+    tagline: 'Born on Wednesday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kwaku, the Wednesday-born. KWAKU day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('wednesday-borns/kwaku/kwaku-shirt-gyenyame-2.png'),
+    images: [pi('wednesday-borns/kwaku/kwaku-shirt-gyenyame-2.png'), pi('wednesday-borns/kwaku/kwaku-shirt-gyenyame-1.png'), pi('wednesday-borns/kwaku/kwaku-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3JHCZDZ?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Thursday — Yaa & Yaw ─────────────────────────────────────────────────
+  {
+    id: 240, name: 'Yaa Thursday Born Mug — Sankofa', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Yaa, the Thursday-born. Features the YAA name with the Sankofa Adinkra symbol.',
+    image: pi('thursday-borns/yaa/yaa-mug-sankofa-card.png'),
+    images: [pi('thursday-borns/yaa/yaa-mug-sankofa-card.png'), pi('thursday-borns/yaa/yaa-mug-sankofa-3.jpg'), pi('thursday-borns/yaa/yaa-mug-sankofa-1.jpeg'), pi('thursday-borns/yaa/yaa-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3JHCZDZ?th=1&psc=1', ...MUG_BASE,
+  },
+  {
+    id: 241, name: 'Yaa Thursday Born Mug — Gye Nyame', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Yaa, the Thursday-born. Features the YAA name with the Gye Nyame Adinkra symbol.',
+    image: pi('thursday-borns/yaa/yaa-mug-gyenyame-card.png'),
+    images: [pi('thursday-borns/yaa/yaa-mug-gyenyame-card.png'), pi('thursday-borns/yaa/yaa-mug-gyenyame-3.jpg'), pi('thursday-borns/yaa/yaa-mug-gyenyame-1.png'), pi('thursday-borns/yaa/yaa-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3JHCZDZ?th=1&psc=1', ...MUG_BASE,
+  },
+  {
+    id: 242, name: 'Yaw Thursday Born Mug — Gye Nyame', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Yaw, the Thursday-born. Features the YAW name with the Gye Nyame Adinkra symbol.',
+    image: pi('thursday-borns/yaw/yaw-mug-gyenyame-card.png'),
+    images: [pi('thursday-borns/yaw/yaw-mug-gyenyame-card.png'), pi('thursday-borns/yaw/yaw-mug-gyenyame-3.jpg'), pi('thursday-borns/yaw/yaw-mug-gyenyame-1.png'), pi('thursday-borns/yaw/yaw-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BQR2FD?th=1', ...MUG_BASE,
+  },
+  {
+    id: 243, name: 'Yaw Thursday Born Mug — Sankofa', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Yaw, the Thursday-born. Features the YAW name with the Sankofa Adinkra symbol.',
+    image: pi('thursday-borns/yaw/yaw-mug-sankofa-card.png'),
+    images: [pi('thursday-borns/yaw/yaw-mug-sankofa-card.png'), pi('thursday-borns/yaw/yaw-mug-sankofa-3.jpg'), pi('thursday-borns/yaw/yaw-mug-sankofa-1.jpeg'), pi('thursday-borns/yaw/yaw-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BTP4GV', ...MUG_BASE,
+  },
+  {
+    id: 244, name: 'Yaa Thursday Born Baby Onesie', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Yaa, the Thursday-born baby. Soft, premium cotton with the YAA day-born print.',
+    image: pi('thursday-borns/yaa/yaa-baby-1.png'),
+    images: [pi('thursday-borns/yaa/yaa-baby-1.png'), pi('thursday-borns/yaa/yaa-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59GDCYD?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 245, name: 'Yaw Thursday Born Baby Onesie', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Yaw, the Thursday-born baby. Soft, premium cotton with the YAW day-born print.',
+    image: pi('thursday-borns/yaw/yaw-baby-1.png'),
+    images: [pi('thursday-borns/yaw/yaw-baby-1.png'), pi('thursday-borns/yaw/yaw-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59TQ4DL?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 246, name: 'Yaa Thursday Born Shirt — Sankofa Back', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Yaa, the Thursday-born. YAA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('thursday-borns/yaa/yaa-shirt-sankofa-1.png'),
+    images: [pi('thursday-borns/yaa/yaa-shirt-sankofa-1.png'), pi('thursday-borns/yaa/yaa-shirt-sankofa-2.jpg'), pi('thursday-borns/yaa/yaa-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3J6JY17?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 247, name: 'Yaa Thursday Born Shirt — Gye Nyame Back', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Yaa, the Thursday-born. YAA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('thursday-borns/yaa/yaa-shirt-gyenyame-1.png'),
+    images: [pi('thursday-borns/yaa/yaa-shirt-gyenyame-1.png'), pi('thursday-borns/yaa/yaa-shirt-gyenyame-2.jpg'), pi('thursday-borns/yaa/yaa-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3JD7Z3B?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 248, name: 'Yaw Thursday Born Shirt — Gye Nyame Back', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Yaw, the Thursday-born. YAW day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('thursday-borns/yaw/yaw-shirt-gyenyame-1.png'),
+    images: [pi('thursday-borns/yaw/yaw-shirt-gyenyame-1.png'), pi('thursday-borns/yaw/yaw-shirt-gyenyame-2.jpg'), pi('thursday-borns/yaw/yaw-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3JD7Z3B?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 249, name: 'Yaw Thursday Born Shirt — Sankofa Back', bornDay: 'Thursday',
+    tagline: 'Born on Thursday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Yaw, the Thursday-born. YAW day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('thursday-borns/yaw/yaw-shirt-sankofa-1.png'),
+    images: [pi('thursday-borns/yaw/yaw-shirt-sankofa-1.png'), pi('thursday-borns/yaw/yaw-shirt-sankofa-2.jpg'), pi('thursday-borns/yaw/yaw-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H598WHS8?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Friday — Kofi & Afia ─────────────────────────────────────────────────
+  {
+    id: 250, name: 'Kofi Friday Born Mug — Gye Nyame', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kofi, the Friday-born. Features the KOFI name on the front with the Gye Nyame Adinkra symbol.',
+    image: pi('friday-borns/kofi/kofi-mug-gyenyame-card.png'),
+    images: [pi('friday-borns/kofi/kofi-mug-gyenyame-card.png'), pi('friday-borns/kofi/kofi-mug-gyenyame-3.jpg'), pi('friday-borns/kofi/kofi-mug-gyenyame-2.png'), pi('friday-borns/kofi/kofi-mug-gyenyame-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59VLGGH', ...MUG_BASE,
+  },
+  {
+    id: 251, name: 'Kofi Friday Born Mug — Sankofa', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Kofi, the Friday-born. Features the KOFI name on the front with the Sankofa Adinkra symbol.',
+    image: pi('friday-borns/kofi/kofi-mug-sankofa-card.png'),
+    images: [pi('friday-borns/kofi/kofi-mug-sankofa-card.png'), pi('friday-borns/kofi/kofi-mug-sankofa-3.jpg'), pi('friday-borns/kofi/kofi-mug-sankofa-1.png'), pi('friday-borns/kofi/kofi-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5B667J5', ...MUG_BASE,
+  },
+  {
+    id: 252, name: 'Afia Friday Born Mug — Gye Nyame', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Afia, the Friday-born. Features the AFIA name on the front with the Gye Nyame Adinkra symbol.',
+    image: pi('friday-borns/afia/afia-mug-gyenyame-card.png'),
+    images: [pi('friday-borns/afia/afia-mug-gyenyame-card.png'), pi('friday-borns/afia/afia-mug-gyenyame-3.jpg'), pi('friday-borns/afia/afia-mug-gyenyame-1.png'), pi('friday-borns/afia/afia-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59ZS41J', ...MUG_BASE,
+  },
+  {
+    id: 253, name: 'Afia Friday Born Mug — Sankofa', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Afia, the Friday-born. Features the AFIA name on the front with the Sankofa Adinkra symbol.',
+    image: pi('friday-borns/afia/afia-mug-sankofa-card.png'),
+    images: [pi('friday-borns/afia/afia-mug-sankofa-card.png'), pi('friday-borns/afia/afia-mug-sankofa-3.jpg'), pi('friday-borns/afia/afia-mug-sankofa-1.png'), pi('friday-borns/afia/afia-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H59RFLQ9', ...MUG_BASE,
+  },
+  {
+    id: 254, name: 'Afia Friday Born Baby Onesie', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Afia, the Friday-born baby. Soft, premium cotton with the AFIA day-born print.',
+    image: pi('friday-borns/afia/afia-baby-1.png'),
+    images: [pi('friday-borns/afia/afia-baby-1.png'), pi('friday-borns/afia/afia-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BW8H5F?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 255, name: 'Kofi Friday Born Baby Onesie', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Kofi, the Friday-born baby. Soft, premium cotton with the KOFI day-born print.',
+    image: pi('friday-borns/kofi/kofi-baby-1.png'),
+    images: [pi('friday-borns/kofi/kofi-baby-1.png'), pi('friday-borns/kofi/kofi-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BSYK74?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 256, name: 'Afia Friday Born Shirt — Sankofa Back', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Afia, the Friday-born. AFIA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('friday-borns/afia/afia-shirt-sankofa-2.png'),
+    images: [pi('friday-borns/afia/afia-shirt-sankofa-2.png'), pi('friday-borns/afia/afia-shirt-sankofa-1.png'), pi('friday-borns/afia/afia-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58XWNNX?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 257, name: 'Afia Friday Born Shirt — Gye Nyame Back', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Afia, the Friday-born. AFIA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('friday-borns/afia/afia-shirt-gyenyame-2.png'),
+    images: [pi('friday-borns/afia/afia-shirt-gyenyame-2.png'), pi('friday-borns/afia/afia-shirt-gyenyame-1.png'), pi('friday-borns/afia/afia-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58RFZ49?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 258, name: 'Kofi Friday Born Shirt — Sankofa Back', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kofi, the Friday-born. KOFI day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('friday-borns/kofi/kofi-shirt-sankofa-3.jpg'),
+    images: [pi('friday-borns/kofi/kofi-shirt-sankofa-3.jpg'), pi('friday-borns/kofi/kofi-shirt-sankofa-1.png'), pi('friday-borns/kofi/kofi-shirt-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58W8X8W?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 259, name: 'Kofi Friday Born Shirt — Gye Nyame Back', bornDay: 'Friday',
+    tagline: 'Born on Friday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kofi, the Friday-born. KOFI day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('friday-borns/kofi/kofi-shirt-gyenyame-2.jpg'),
+    images: [pi('friday-borns/kofi/kofi-shirt-gyenyame-2.jpg'), pi('friday-borns/kofi/kofi-shirt-gyenyame-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58T4FGX?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Saturday — Kwame & Ama ───────────────────────────────────────────────
+  {
+    id: 260, name: 'Ama Saturday Born Baby Onesie', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Ama, the Saturday-born baby. Soft, premium cotton with the AMA day-born print.',
+    image: pi('saturday-borns/ama/ama-baby-1.png'),
+    images: [pi('saturday-borns/ama/ama-baby-1.png'), pi('saturday-borns/ama/ama-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BWNNR5?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 261, name: 'Kwame Saturday Born Baby Onesie', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Kwame, the Saturday-born baby. Soft, premium cotton with the KWAME day-born print.',
+    image: pi('saturday-borns/kwame/kwame-baby-1.png'),
+    images: [pi('saturday-borns/kwame/kwame-baby-1.png'), pi('saturday-borns/kwame/kwame-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BSV45R?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 262, name: 'Kwame Saturday Born Mug — Gye Nyame', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kwame, the Saturday-born. Features the KWAME name on the front with the Gye Nyame Adinkra symbol.',
+    image: pi('saturday-borns/kwame/kwame-mug-gyenyame-card.png'),
+    images: [pi('saturday-borns/kwame/kwame-mug-gyenyame-card.png'), pi('saturday-borns/kwame/kwame-mug-gyenyame-3.jpg'), pi('saturday-borns/kwame/kwame-mug-gyenyame-1.png'), pi('saturday-borns/kwame/kwame-mug-gyenyame-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BR8FQ3', ...MUG_BASE,
+  },
+  {
+    id: 263, name: 'Kwame Saturday Born Mug — Sankofa', bornDay: 'Saturday', soldOut: true,
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Kwame, the Saturday-born. Features the KWAME name on the front with the Sankofa Adinkra symbol. Currently out of stock.',
+    image: pi('saturday-borns/kwame/kwame-mug-sankofa-card.png'),
+    images: [pi('saturday-borns/kwame/kwame-mug-sankofa-card.png'), pi('saturday-borns/kwame/kwame-mug-sankofa-3.jpg'), pi('saturday-borns/kwame/kwame-mug-sankofa-1.png'), pi('saturday-borns/kwame/kwame-mug-sankofa-2.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5J11PLS', ...MUG_BASE,
+  },
+  {
+    id: 264, name: 'Ama Saturday Born Shirt — Sankofa Back', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Ama, the Saturday-born. AMA day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('saturday-borns/ama/ama-shirt-sankofa-1.png'),
+    images: [pi('saturday-borns/ama/ama-shirt-sankofa-1.png'), pi('saturday-borns/ama/ama-shirt-sankofa-3.png'), pi('saturday-borns/ama/ama-shirt-sankofa-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3SFDJX2?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 265, name: 'Ama Saturday Born Shirt — Gye Nyame Back', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Ama, the Saturday-born. AMA day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('saturday-borns/ama/ama-shirt-gyenyame-2.png'),
+    images: [pi('saturday-borns/ama/ama-shirt-gyenyame-2.png'), pi('saturday-borns/ama/ama-shirt-gyenyame-1.png'), pi('saturday-borns/ama/ama-shirt-gyenyame-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3SDZ5T5?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 266, name: 'Kwame Saturday Born Shirt — Gye Nyame Back', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kwame, the Saturday-born. KWAME day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('saturday-borns/kwame/kwame-shirt-gyenyame-2.png'),
+    images: [pi('saturday-borns/kwame/kwame-shirt-gyenyame-2.png'), pi('saturday-borns/kwame/kwame-shirt-gyenyame-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H58WZVCH?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 267, name: 'Kwame Saturday Born Shirt — Sankofa Back', bornDay: 'Saturday',
+    tagline: 'Born on Saturday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kwame, the Saturday-born. KWAME day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('saturday-borns/kwame/kwame-shirt-sankofa-2.png'),
+    images: [pi('saturday-borns/kwame/kwame-shirt-sankofa-2.png'), pi('saturday-borns/kwame/kwame-shirt-sankofa-1.png'), pi('saturday-borns/kwame/kwame-shirt-sankofa-3.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3SKZBHR?th=1&psc=1', ...TSHIRT_BASE,
+  },
+
+  // ── Sunday — Akosua, Kwasi & Kwesi ───────────────────────────────────────
+  {
+    id: 270, name: 'Akosua Sunday Born Shirt — Sankofa Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Royal blue · Sankofa back',
+    description: 'Premium heritage T-shirt for Akosua, the Sunday-born. Royal blue colourway with the AKOSUA day-born print on the front and the Sankofa Adinkra symbol on the back.',
+    image: pi('sunday-borns/akosua/akosua-shirt-sankofa-1.png'),
+    images: [pi('sunday-borns/akosua/akosua-shirt-sankofa-1.png')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5925J6Y?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 271, name: 'Akosua Sunday Born Baby Onesie', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Akosua, the Sunday-born baby. Soft, premium cotton with the AKOSUA day-born print.',
+    image: pi('sunday-borns/akosua/akosua-baby-1.png'),
+    images: [pi('sunday-borns/akosua/akosua-baby-1.png'), pi('sunday-borns/akosua/akosua-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5D9SRCQ?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 272, name: 'Kwasi Sunday Born Baby Onesie', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Kwasi, the Sunday-born baby. Soft, premium cotton with the KWASI day-born print.',
+    image: pi('sunday-borns/kwasi/kwasi-baby-1.png'),
+    images: [pi('sunday-borns/kwasi/kwasi-baby-1.png'), pi('sunday-borns/kwasi/kwasi-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5CZNV1P?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 273, name: 'Kwesi Sunday Born Baby Onesie', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Soft cotton · Infant onesie',
+    description: 'Personalized heritage infant onesie for Kwesi, the Sunday-born baby. Soft, premium cotton with the KWESI day-born print.',
+    image: pi('sunday-borns/kwesi/kwesi-baby-1.png'),
+    images: [pi('sunday-borns/kwesi/kwesi-baby-1.png'), pi('sunday-borns/kwesi/kwesi-baby-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BV7MD3?th=1&psc=1', ...BABYSUIT_BASE,
+  },
+  {
+    id: 274, name: 'Kwesi Sunday Born Shirt — Gye Nyame Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kwesi, the Sunday-born. KWESI day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('sunday-borns/kwesi/kwesi-shirt-gyenyame-1.jpeg'),
+    images: [pi('sunday-borns/kwesi/kwesi-shirt-gyenyame-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3J8H89G?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 275, name: 'Kwesi Sunday Born Shirt — Sankofa Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kwesi, the Sunday-born. KWESI day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('sunday-borns/kwesi/kwesi-shirt-sankofa-1.jpeg'),
+    images: [pi('sunday-borns/kwesi/kwesi-shirt-sankofa-1.jpeg'), pi('sunday-borns/kwesi/kwesi-shirt-sankofa-2.jpg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3J2Z4HP?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 276, name: 'Kwasi Sunday Born Shirt — Gye Nyame Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Gye Nyame back',
+    description: 'Premium heritage T-shirt for Kwasi, the Sunday-born. KWASI day-born print on the front with the Gye Nyame Adinkra symbol on the back.',
+    image: pi('sunday-borns/kwasi/kwasi-shirt-gyenyame-1.jpeg'),
+    images: [pi('sunday-borns/kwasi/kwasi-shirt-gyenyame-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3RJ79NN?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 277, name: 'Kwasi Sunday Born Shirt — Sankofa Back', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Sankofa back',
+    description: 'Premium heritage T-shirt for Kwasi, the Sunday-born. KWASI day-born print on the front with the Sankofa Adinkra symbol on the back.',
+    image: pi('sunday-borns/kwasi/kwasi-shirt-sankofa-1.jpeg'),
+    images: [pi('sunday-borns/kwasi/kwasi-shirt-sankofa-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H3RDWFKR?th=1&psc=1', ...TSHIRT_BASE,
+  },
+  {
+    id: 278, name: 'Akosua Sunday Born Mug — Sankofa', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Akosua, the Sunday-born. Features the AKOSUA name on the front with the Sankofa Adinkra symbol.',
+    image: pi('sunday-borns/akosua/akosua-mug-sankofa-2.jpg'),
+    images: [pi('sunday-borns/akosua/akosua-mug-sankofa-2.jpg'), pi('sunday-borns/akosua/akosua-mug-sankofa-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BPYLLH', ...MUG_BASE,
+  },
+  {
+    id: 279, name: 'Akosua Sunday Born Mug — Gye Nyame', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Akosua, the Sunday-born. Features the AKOSUA name on the front with the Gye Nyame Adinkra symbol.',
+    image: pi('sunday-borns/akosua/akosua-mug-gyenyame-2.jpg'),
+    images: [pi('sunday-borns/akosua/akosua-mug-gyenyame-2.jpg'), pi('sunday-borns/akosua/akosua-mug-gyenyame-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BTPKTN', ...MUG_BASE,
+  },
+  {
+    id: 280, name: 'Kwasi Sunday Born Mug — Sankofa', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Ceramic mug · Sankofa',
+    description: 'Premium ceramic heritage mug for Kwasi, the Sunday-born. Features the KWASI name on the front with the Sankofa Adinkra symbol.',
+    image: pi('sunday-borns/kwasi/kwasi-mug-sankofa-2.jpg'),
+    images: [pi('sunday-borns/kwasi/kwasi-mug-sankofa-2.jpg'), pi('sunday-borns/kwasi/kwasi-mug-sankofa-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BNJ6TL', ...MUG_BASE,
+  },
+  {
+    id: 281, name: 'Kwasi Sunday Born Mug — Gye Nyame', bornDay: 'Sunday',
+    tagline: 'Born on Sunday · Akan Heritage', cardBlurb: 'Ceramic mug · Gye Nyame',
+    description: 'Premium ceramic heritage mug for Kwasi, the Sunday-born. Features the KWASI name on the front with the Gye Nyame Adinkra symbol.',
+    image: pi('sunday-borns/kwasi/kwasi-mug-sankofa-2.jpg'),
+    images: [pi('sunday-borns/kwasi/kwasi-mug-sankofa-2.jpg'), pi('sunday-borns/kwasi/kwasi-mug-gyenyame-1.jpeg')],
+    amazonUrl: 'https://www.amazon.com/dp/B0H5BM1WNS', ...MUG_BASE,
+  },
+];
+
+// Previous catalog — kept for reference, no longer shown:
+// export const products = [...INDIVIDUAL_PRODUCTS].filter((p) => !p.hidden);
+export const products = AMAZON_PRODUCTS;
+
+// ─── Active day-born helpers ─────────────────────────────────────────────────
+// Surface "today's" day-born products (e.g. on a Tuesday show Tuesday-borns).
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+export function getTodayBornDay(date = new Date()) {
+  return DAY_NAMES[date.getDay()];
+}
+
+// All products whose bornDay matches today. Falls back to the full catalog
+// only if (somehow) today has no products.
+export function getActiveDayProducts(date = new Date()) {
+  const day = getTodayBornDay(date);
+  const todays = products.filter((p) => p.bornDay === day && !p.soldOut);
+  return todays.length ? todays : products.filter((p) => !p.soldOut);
+}
+
+// A small, type-diverse set of today's day-born products (for the welcome pop-up).
+export function getActiveDayFeatured(count = 3, date = new Date()) {
+  const todays = getActiveDayProducts(date);
+  const order = ['tshirt', 'mug', 'babysuit', 'hoodie'];
+  const picked = [];
+  const used = new Set();
+  for (const t of order) {
+    const p = todays.find((x) => x.type === t && !used.has(x.id));
+    if (p) { picked.push(p); used.add(p.id); }
+    if (picked.length >= count) break;
+  }
+  for (const p of todays) {
+    if (picked.length >= count) break;
+    if (!used.has(p.id)) { picked.push(p); used.add(p.id); }
+  }
+  return picked.slice(0, count);
+}
+
+// Today's day-born product for a given store category type — used by the
+// homepage "Shop by Category" tiles so they reflect the active day-born.
+export function pickActiveDayByType(type, date = new Date()) {
+  const day = getTodayBornDay(date);
+  return products.find((p) => p.bornDay === day && p.type === type && !p.soldOut)
+      || products.find((p) => p.type === type && !p.soldOut);
+}
 
 export const STORE_BUNDLE_SETS = [
   {
-    id: 'naming-ceremony',
-    title: 'Naming Ceremony Bundle',
-    subtitle: 'T-Shirt + Baby Bodysuit',
-    desc: 'Everything you need to celebrate a new life in Akan tradition. A day-born T-shirt for the parents and a heritage bodysuit for the baby.',
-    productIds: [29, 30, 80, 79],
-  },
-  {
-    id: 'friday-born-set',
-    title: 'Friday Born Signature Set',
-    subtitle: 'Kofi & Afia T-Shirts + Baby Bodysuits',
-    desc: 'The complete Friday-born collection — premium heritage T-shirts for Kofi and Afia, plus matching baby bodysuits. All linked to Etsy.',
-    productIds: [27, 28, 78, 77],
-  },
-  {
-    id: 'saturday-born-set',
-    title: 'Saturday Born Signature Set',
-    subtitle: 'Kwame & Ama T-Shirts + Baby Bodysuits',
-    desc: 'The complete Saturday-born collection — premium heritage T-shirts for Kwame and Ama, plus matching baby bodysuits. All linked to Etsy.',
-    productIds: [29, 30, 80, 79],
-  },
-  {
-    id: 'tuesday-born-set',
-    title: 'Tuesday Born Signature Set',
-    subtitle: 'Kwabena & Abena T-Shirts + Baby Bodysuits',
-    desc: 'The complete Tuesday-born collection — premium heritage T-shirts for Kwabena and Abena, plus matching baby bodysuits. All linked to Etsy.',
-    productIds: [39, 35, 72, 71],
+    id: 'akan-family-set',
+    title: 'Akan Family Heritage Set',
+    subtitle: 'Adult Tee + Baby Bodysuit',
+    desc: 'Celebrate your Akan day-born identity together — the premium Akosua adult day-born T-shirt paired with the matching Akua heritage baby onesie. Available on Amazon.',
+    productIds: [201, 234],
   },
 ];
 

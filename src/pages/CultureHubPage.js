@@ -121,6 +121,17 @@ const hubs = [
     colourMeaning: 'Blue: the Atlantic, the rivers, and the sky that connects Ghana to every corner of the diaspora.',
     badge: 'New',
   },
+  {
+    to: '/culture/foods',
+    symbol: '🍲',
+    title: 'Ghanaian Foods',
+    subtitle: "Afia's Village Kitchen",
+    desc: "A culturally authentic taste of Ghana — rich soups and pounded staples, grilled specialties, street snacks, celebration feasts, drinks, and the fruits of Afia's world.",
+    color: '#e07020',
+    kente: ['#e07020', '#1a1a1a', '#C9A558', '#e07020', '#1a1a1a'],
+    colourMeaning: 'Warm spice tones: the palm oil, pepper, and roasted groundnut at the heart of the Ghanaian kitchen.',
+    badge: 'New',
+  },
 ];
 
 // ── Journey Steps ─────────────────────────────────────────────────────────────

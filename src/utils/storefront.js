@@ -7,6 +7,10 @@ const PRIORITY = (process.env.REACT_APP_OFFICIAL_STORE_PRIORITY || 'etsy').toLow
  * then fall back to store-wide URLs. Same logic everywhere (cards, detail, bundles).
  */
 export function getOfficialPurchaseTarget(product) {
+  // Amazon is now the official storefront — always prefer it when present.
+  const aUrl = (product?.amazonUrl || '').trim();
+  if (aUrl) return { url: aUrl, channel: 'amazon' };
+
   const pUrl = (product?.printifyUrl || '').trim();
   const eUrl = (product?.etsyUrl || '').trim();
 

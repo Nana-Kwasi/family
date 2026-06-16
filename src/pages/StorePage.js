@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { products, STORE_BUNDLE_SETS } from '../data/products';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { products, STORE_BUNDLE_SETS, DAY_NAMES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { buildTrackedExternalUrl } from '../utils/commerceLinks';
 import { trackEvent } from '../utils/analytics';
@@ -12,13 +12,23 @@ const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies', 'Babysuits'];
 const DAY_FILTERS = ['All Days', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** Product ids shown on the store hero (right column). */
-const STORE_HERO_IMAGE_IDS = [27, 45, 56];
+const STORE_HERO_IMAGE_IDS = [201, 226, 234];
 
 export default function StorePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeDayFilter, setActiveDayFilter] = useState('All Days');
   const [sortBy, setSortBy] = useState('featured');
+
+  // Apply category/day pre-filters when arriving from a homepage link
+  // (e.g. /store?category=Mugs&day=Tuesday).
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat && categories.includes(cat)) setActiveFilter(cat);
+    const day = searchParams.get('day');
+    if (day && DAY_FILTERS.includes(day)) setActiveDayFilter(day);
+  }, [searchParams]);
 
   useSEO({
     title: 'Shop Akan Heritage Gifts — Day-Born T-Shirts, Mugs & Baby Bodysuits',
@@ -45,25 +55,52 @@ export default function StorePage() {
     if (sortBy === 'price_asc') { list.sort((a, b) => a.price - b.price); return list; }
     if (sortBy === 'price_desc') { list.sort((a, b) => b.price - a.price); return list; }
     if (sortBy === 'name') { list.sort((a, b) => a.name.localeCompare(b.name)); return list; }
-    // Featured: interleave by type (mug → tshirt → hoodie → babysuit, repeat)
-    const order = ['mug', 'tshirt', 'hoodie', 'babysuit'];
-    const buckets = {};
-    order.forEach((t) => { buckets[t] = []; });
-    list.sort((a, b) => a.id - b.id).forEach((p) => {
-      if (buckets[p.type]) buckets[p.type].push(p);
-      else { if (!buckets._other) buckets._other = []; buckets._other.push(p); }
+    // Featured: mix BOTH product type and day-born so neither clusters on a row.
+    // 1) Bucket by type. 2) Order each type bucket so its days rotate, offset
+    //    per type so buckets don't all start on the same day. 3) Greedily merge,
+    //    always drawing from the largest remaining type bucket (keeps types
+    //    evenly spread — no pile-up of one type at the end) while avoiding the
+    //    previous card's type and any day used in the last few cards.
+    const typeOrder = ['mug', 'tshirt', 'babysuit', 'hoodie'];
+    const dayIdx = (d) => { const i = DAY_NAMES.indexOf(d); return i < 0 ? 99 : i; };
+    const typeBuckets = {};
+    const order = [];
+    list.forEach((p) => {
+      const key = p.type || '_other';
+      if (!typeBuckets[key]) { typeBuckets[key] = []; }
+      typeBuckets[key].push(p);
     });
-    const allBuckets = [...order.map((t) => buckets[t]), buckets._other || []].filter((b) => b && b.length);
-    const mixed = [];
-    let i = 0;
-    while (mixed.length < list.length) {
-      let added = false;
-      for (let b = 0; b < allBuckets.length; b++) {
-        const bucket = allBuckets[(b + i) % allBuckets.length];
-        if (bucket.length > 0) { mixed.push(bucket.shift()); added = true; break; }
+    typeOrder.forEach((t) => { if (typeBuckets[t]) order.push(t); });
+    Object.keys(typeBuckets).forEach((t) => { if (!order.includes(t)) order.push(t); });
+    const dayRoundRobin = (arr, offset) => {
+      const byDay = {};
+      arr.slice().sort((a, b) => a.id - b.id).forEach((p) => { (byDay[p.bornDay] = byDay[p.bornDay] || []).push(p); });
+      const days = Object.keys(byDay).sort((a, b) => dayIdx(a) - dayIdx(b));
+      const out = [];
+      let i = offset;
+      while (out.length < arr.length) {
+        let added = false;
+        for (let b = 0; b < days.length; b++) {
+          const bk = byDay[days[(b + i) % days.length]];
+          if (bk.length) { out.push(bk.shift()); added = true; break; }
+        }
+        if (!added) break;
+        i++;
       }
-      if (!added) break;
-      i++;
+      return out;
+    };
+    order.forEach((t, ti) => { typeBuckets[t] = dayRoundRobin(typeBuckets[t], ti * 2); });
+    const LOOKBACK = 3;
+    const mixed = [];
+    while (mixed.length < list.length) {
+      const avail = order.filter((t) => typeBuckets[t].length).sort((a, b) => typeBuckets[b].length - typeBuckets[a].length);
+      const recentDays = mixed.slice(-LOOKBACK).map((p) => p.bornDay);
+      const prevType = mixed.length ? mixed[mixed.length - 1].type : null;
+      const chosen = avail.find((t) => t !== prevType && !recentDays.includes(typeBuckets[t][0].bornDay))
+        || avail.find((t) => !recentDays.includes(typeBuckets[t][0].bornDay))
+        || avail.find((t) => t !== prevType)
+        || avail[0];
+      mixed.push(typeBuckets[chosen].shift());
     }
     return mixed;
   }, [filtered, sortBy]);
@@ -138,19 +175,19 @@ export default function StorePage() {
           </div>
         </div>
         <a
-          href="https://www.etsy.com/shop/MamaAfricaCouture"
+          href="https://www.amazon.com/dp/B0H58WLSV2"
           target="_blank"
           rel="noopener noreferrer"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: '#F56400', color: '#fff',
+            background: '#FF9900', color: '#111', border: '1px solid #e88a00',
             borderRadius: 999, padding: '6px 14px',
             fontFamily: "'Montserrat', sans-serif", fontSize: 11,
             fontWeight: 700, letterSpacing: '0.08em', textDecoration: 'none',
             textTransform: 'uppercase',
           }}
         >
-          View on Etsy →
+          View on Amazon →
         </a>
       </div>
 
@@ -206,7 +243,7 @@ export default function StorePage() {
           fontSize: 12,
           letterSpacing: '0.04em',
         }}>
-          Secure Etsy checkout · Premium print quality · Delivery tracking after purchase
+          Secure Amazon checkout · Premium print quality · Delivery tracking after purchase
           {' '}
           <Link to="/shipping-returns" style={{ color: '#8B6914', textDecoration: 'underline' }}>Shipping & Returns</Link>
         </div>
@@ -402,6 +439,8 @@ export default function StorePage() {
         </div>
       </section>
 
+      {/* Signature Bundles — removed for now */}
+      {false && (
       <section style={{ padding: '0 20px 24px' }}>
         <div style={{ width: '100%', marginBottom: 12 }}>
           <p style={{ color: '#8A6B2D', fontFamily: "'Montserrat', sans-serif", textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.14em', marginBottom: 8 }}>
@@ -503,6 +542,7 @@ export default function StorePage() {
           })}
         </div>
       </section>
+      )}
 
       <section style={{ padding: '0 20px 26px' }}>
         <div style={{ width: '100%' }}>

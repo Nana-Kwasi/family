@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { trackEvent } from '../utils/analytics';
 import useSEO from '../hooks/useSEO';
 import TestimonialsSection from '../components/ui/TestimonialsSection';
+import { getTodayBornDay, pickActiveDayByType } from '../data/products';
 
 const pi = (file) => encodeURI(`/images/${file}`);
 
@@ -10,10 +11,16 @@ const pi = (file) => encodeURI(`/images/${file}`);
 // The full campaign storyboard shows first (rendered in full), followed by the
 // six single banners. Each image already carries its own headline/CTA artwork,
 // so the carousel adds no overlaid text.
+// All slides are 3:2 (matching the carousel frame) so they fill edge-to-edge
+// with nothing cropped. Day-born lifestyle slides show the names with the
+// Sankofa & Gye Nyame Adinkra symbols.
 const HERO_SLIDES = [
   { src: pi('commercial-images/mama africa website commercial.png') },
   { src: pi('commercial-images/mama africa commercial pt 2 image 1.png') },
+  { src: pi('commercial-images/day-born-babies-wide.png') },
+  { src: pi('sunday-borns/kwasi/kwasi-shirt-gyenyame-1.jpeg') },
   { src: pi('commercial-images/mama affrica commercial image 4 revised.png') },
+  { src: pi('sunday-borns/akosua/akosua-mug-sankofa-1.jpeg') },
   { src: pi('commercial-images/Website image 5.png') },
   { src: pi('commercial-images/website commercial image 6.png') },
 ];
@@ -70,6 +77,26 @@ function HeroCarousel() {
         }
       `}</style>
 
+      {/* Blurred backdrop — fills the frame for portrait slides so the whole
+          photo stays visible (nothing cropped) while the carousel reads as full.
+          Kept bright so no part of the artwork looks hidden behind a dark wash. */}
+      {slide.fit === 'contain' && (
+        <img
+          key={`bg-${current}`}
+          src={slide.src}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+            filter: 'blur(44px) brightness(0.92) saturate(1.05)',
+            transform: 'scale(1.2)',
+            display: 'block',
+          }}
+        />
+      )}
+
       {/* Slide image */}
       <img
         key={current}
@@ -78,7 +105,7 @@ function HeroCarousel() {
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%',
-          objectFit: 'cover', objectPosition: 'top center',
+          objectFit: slide.fit || 'cover', objectPosition: slide.fit === 'contain' ? 'center' : 'top center',
           animation: 'heroFadeIn 0.85s ease forwards',
           display: 'block',
         }}
@@ -183,37 +210,46 @@ function TrustBar() {
 }
 
 // ─── Category Tiles ───────────────────────────────────────────────────────────
+// Each tile features TODAY's day-born product for that category, so the homepage
+// always surfaces the active day-born (e.g. Tuesday-born styles on a Tuesday).
 const CATEGORIES = [
-  { label: 'T-Shirts', img: pi('group of men and women wearing white t shirt day born.jpeg'), filter: 'T-Shirts' },
-  { label: 'Baby Bodysuits', img: pi('toddler abena cream baby suit.jpeg'), filter: 'Babysuits' },
-  { label: 'Mugs', img: pi('Akosua Sunday Born Mug.png'), filter: 'Mugs' },
+  { label: 'T-Shirts', type: 'tshirt', filter: 'T-Shirts', fallback: pi('monday-borns/kwadwo/kojo-shirt-gyenyame-1.jpeg') },
+  { label: 'Baby Bodysuits', type: 'babysuit', filter: 'Babysuits', fallback: pi('akua-infant/wed-infant.png') },
+  { label: 'Mugs', type: 'mug', filter: 'Mugs', fallback: pi('tuesday-borns/abena/abena-mug-gyenyame-1.png') },
 ];
 
 function ShopByCategory() {
   const navigate = useNavigate();
+  const today = getTodayBornDay();
   return (
     <section style={{ padding: 'clamp(32px,5vw,64px) clamp(16px,3vw,36px)', background: '#FAF9F7' }}>
       <div style={{ maxWidth: 1300, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 'clamp(22px,3vw,40px)' }}>
           <p style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.22em', color: '#8A6B2D', textTransform: 'uppercase', marginBottom: 8 }}>Heritage Collection</p>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px,3.5vw,36px)', color: '#1a1a1a', fontWeight: 700, lineHeight: 1.2 }}>Shop by Category</h2>
+          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, letterSpacing: '0.06em', color: '#8A6B2D', marginTop: 10 }}>
+            Featuring today’s <strong style={{ color: '#1a1a1a' }}>{today}-born</strong> styles
+          </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'clamp(10px,2vw,20px)' }}>
-          {CATEGORIES.map(({ label, img, filter }) => (
+          {CATEGORIES.map(({ label, type, filter, fallback }) => {
+            const product = pickActiveDayByType(type);
+            const img = product ? product.image : fallback;
+            return (
             <button
               key={label}
-              onClick={() => navigate(`/store?category=${encodeURIComponent(filter)}`)}
+              onClick={() => navigate(`/store?category=${encodeURIComponent(filter)}&day=${encodeURIComponent(today)}`)}
               style={{
                 position: 'relative', overflow: 'hidden', borderRadius: 14,
-                height: 'clamp(200px,28vw,320px)',
+                height: 'clamp(240px,30vw,360px)',
                 border: 'none', cursor: 'pointer', padding: 0,
-                background: '#E8E6E2', display: 'block', width: '100%',
+                background: 'linear-gradient(180deg, #F3ECE0 0%, #E6D9C5 100%)', display: 'block', width: '100%',
               }}
             >
               <img
                 src={img}
                 alt={label}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', transition: 'transform 0.4s ease' }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', transition: 'transform 0.4s ease' }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
               />
@@ -223,7 +259,8 @@ function ShopByCategory() {
                 <div style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, color: '#C9A558', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 }}>Shop Now →</div>
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -18,7 +18,7 @@ export default function Navbar() {
   const navLinks = [
     { label: 'Store', path: '/store' },
     { label: 'About Mama Africa', path: '/about' },
-    { label: 'Stories', path: '/stories' },
+    // { label: 'Stories', path: '/stories' }, // hidden for now
     { label: 'Culture', path: '/culture' },
   ];
   if (adminNavUnlocked) {

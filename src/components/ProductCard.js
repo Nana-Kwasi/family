@@ -14,7 +14,7 @@ const ExternalIcon = () => (
 
 export default function ProductCard({ product, animationIndex = 0 }) {
   const { url: targetUrl } = getOfficialPurchaseTarget(product);
-  const buyLabel = 'Buy now';
+  const buyLabel = product.soldOut ? 'Out of stock' : 'Buy now';
 
   function handleShop(e) {
     e.preventDefault();
@@ -98,6 +98,27 @@ export default function ProductCard({ product, animationIndex = 0 }) {
             }}
           >
             {product.bornDay}-born
+          </span>
+        )}
+        {product.soldOut && (
+          <span
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              zIndex: 1,
+              background: 'rgba(26,26,26,0.82)',
+              color: '#F3ECE0',
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              fontWeight: 700,
+              padding: '4px 9px',
+              borderRadius: 999,
+              textTransform: 'uppercase',
+            }}
+          >
+            Out of stock
           </span>
         )}
         <div

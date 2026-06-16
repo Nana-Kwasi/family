@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { products } from '../data/products';
-
-// Real active products — day-born T-shirts and baby bodysuits
-const featured = [
-  products.find((p) => p.id === 27),  // Kofi Friday Born T-Shirt
-  products.find((p) => p.id === 39),  // Kwabena Tuesday Born T-Shirt — Blue
-  products.find((p) => p.id === 65),  // Akosua Sunday Born Baby Bodysuit
-  products.find((p) => p.id === 80),  // Kwame Saturday Born Baby Bodysuit
-].filter(Boolean);
+import { getActiveDayFeatured, getTodayBornDay } from '../data/products';
 
 export default function WelcomePopup() {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const today = getTodayBornDay();
+  const featured = getActiveDayFeatured(3);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 900);
@@ -23,6 +17,7 @@ export default function WelcomePopup() {
 
   function close() { setVisible(false); }
   function goStore() { setVisible(false); navigate('/store'); }
+  function openProduct(id) { setVisible(false); navigate(`/product/${id}`); }
 
   return (
     <div
@@ -40,9 +35,11 @@ export default function WelcomePopup() {
       <style>{`
         @keyframes fadeInOverlay { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideUpCard { from { opacity: 0; transform: translateY(28px) } to { opacity: 1; transform: translateY(0) } }
+        .wp-tile { transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+        .wp-tile:hover { transform: translateY(-4px); border-color: rgba(201,165,88,0.65) !important; box-shadow: 0 12px 28px rgba(0,0,0,0.45); }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: 520, margin: 'auto', paddingTop: 8 }}>
+      <div style={{ width: '100%', maxWidth: 560, margin: 'auto', paddingTop: 8 }}>
 
         {/* Close button */}
         <div
@@ -77,8 +74,8 @@ export default function WelcomePopup() {
           style={{
             background: 'linear-gradient(160deg, #2C1A0E 0%, #3A2010 45%, #2A180C 100%)',
             border: '1px solid rgba(201,165,88,0.45)',
-            borderRadius: 16,
-            padding: 'clamp(24px, 5vw, 40px) clamp(20px, 5vw, 36px) 28px',
+            borderRadius: 18,
+            padding: 'clamp(22px, 5vw, 36px) clamp(18px, 5vw, 34px) 26px',
             boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
             animation: 'slideUpCard 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}
@@ -87,9 +84,9 @@ export default function WelcomePopup() {
           <p style={{
             fontFamily: "'Montserrat', sans-serif", fontSize: 12, fontWeight: 600,
             letterSpacing: '0.24em', color: '#C9A558',
-            textTransform: 'uppercase', marginBottom: 14, textAlign: 'center',
+            textTransform: 'uppercase', marginBottom: 12, textAlign: 'center',
           }}>
-            ✦ &nbsp; Akan Heritage Collection
+            ✦ &nbsp; {today}-Born · Akan Heritage
           </p>
 
           {/* Headline */}
@@ -100,7 +97,7 @@ export default function WelcomePopup() {
             fontWeight: 700,
             lineHeight: 1.25,
             textAlign: 'center',
-            marginBottom: 14,
+            marginBottom: 12,
           }}>
             Wear the Name You Were<br />
             <span style={{ color: '#C9A558' }}>Born With.</span>
@@ -109,40 +106,45 @@ export default function WelcomePopup() {
           {/* Body */}
           <p style={{
             fontFamily: "'Times New Roman', Times, serif",
-            fontSize: 17, color: '#D4B896', fontStyle: 'italic',
-            lineHeight: 1.8, textAlign: 'center', marginBottom: 22,
+            fontSize: 16, color: '#D4B896', fontStyle: 'italic',
+            lineHeight: 1.7, textAlign: 'center', marginBottom: 22,
+            maxWidth: 460, marginLeft: 'auto', marginRight: 'auto',
           }}>
             In Akan tradition, the day you were born gives you a name, a spirit, and a legacy.
-            Our premium day-born T-shirts and baby bodysuits let you carry that heritage
-            with pride — for every generation.
+            Today we celebrate the <strong style={{ color: '#E8CB82', fontStyle: 'normal' }}>{today}-born</strong> —
+            carry the name with our premium pieces.
           </p>
 
-          {/* Product grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-            {featured.map(p => (
-              <div
+          {/* Featured tiles — today's day-born product photography */}
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.max(featured.length, 1)}, 1fr)`, gap: 'clamp(8px, 2vw, 14px)', marginBottom: 24 }}>
+            {featured.map((p) => (
+              <button
                 key={p.id}
-                onClick={() => { setVisible(false); navigate(`/product/${p.id}`); }}
+                type="button"
+                className="wp-tile"
+                onClick={() => openProduct(p.id)}
                 style={{
-                  background: 'rgba(201,165,88,0.06)',
-                  border: '1px solid rgba(201,165,88,0.22)',
-                  borderRadius: 10, overflow: 'hidden',
-                  cursor: 'pointer', transition: 'border-color 0.2s',
+                  border: '1px solid rgba(201,165,88,0.3)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  padding: 0,
+                  background: 'linear-gradient(180deg, #FBF8F2 0%, #EFE7D8 100%)',
+                  display: 'block',
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,165,88,0.55)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(201,165,88,0.22)'}
               >
-                <img
-                  src={p.image} alt={p.name}
-                  style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{ padding: '10px 12px' }}>
-                  <p style={{
-                    fontFamily: "'Playfair Display', serif", fontSize: 13,
-                    color: '#EDD9BC', lineHeight: 1.3,
-                  }}>{p.name}</p>
+                <div style={{
+                  width: '100%', aspectRatio: '3 / 4',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
