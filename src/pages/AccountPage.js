@@ -76,8 +76,10 @@ export default function AccountPage() {
             {user.name}
           </div>
           <div style={{ color: '#7C5F48', fontSize: 14, marginBottom: 4 }}>{user.email}</div>
-          {user.isAdmin && (
-            <span className="status-badge status-delivered" style={{ marginTop: 8, display: 'inline-block' }}>Admin</span>
+          {user.akanName && (
+            <span className="status-badge status-delivered" style={{ marginTop: 8, display: 'inline-block' }}>
+              {user.akanName}{user.dayBorn ? ` · ${user.dayBorn}-born` : ''}
+            </span>
           )}
         </div>
 

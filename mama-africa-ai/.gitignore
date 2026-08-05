@@ -1,0 +1,14 @@
+target/
+.env
+*.log
+.idea/
+*.iml
+.DS_Store
+
+admin-console/node_modules/
+admin-console/dist/
+admin-console/.env
+admin-console/tsconfig.tsbuildinfo
+
+# Holds generated production secrets for the Render deployment.
+RENDER-DEPLOY.md

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ADMIN_OTP_GATE_KEY } from '../constants/adminSession';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -10,9 +9,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const adminNavUnlocked = Boolean(
-    user?.isAdmin && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(ADMIN_OTP_GATE_KEY),
-  );
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
@@ -21,10 +17,6 @@ export default function Navbar() {
     // { label: 'Stories', path: '/stories' }, // hidden for now
     { label: 'Culture', path: '/culture' },
   ];
-  if (adminNavUnlocked) {
-    navLinks.push({ label: 'Stories Admin', path: '/admin/stories' });
-  }
-
   function handleLogout() {
     logout();
     setMenuOpen(false);
@@ -61,7 +53,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link to="/auth" className={`nav-link ${isActive('/auth') ? 'nav-link-active' : ''}`}>
-              Admin
+              Sign In
             </Link>
           )}
         </div>
@@ -98,7 +90,7 @@ export default function Navbar() {
             </>
           ) : (
             <Link to="/auth" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>
-              Admin Login
+              Sign In
             </Link>
           )}
         </div>

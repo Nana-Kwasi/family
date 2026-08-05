@@ -2,14 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import dayBorns from '../data/akanDayBorns.json';
-import { products } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { useAccountGate } from '../components/AccountGate';
 import WhiteProductSection from '../components/ui/WhiteProductSection';
 import EmailCapture from '../components/ui/EmailCapture';
 import { generateCertificateDataUrl, CERT_VARIANTS } from '../utils/certificateCanvas';
 import useSEO from '../hooks/useSEO';
 
 const CERT_STYLE_SAMPLES = [
-  { variant: CERT_VARIANTS.NAMING_ADINKRA, src: '/images/cer-sample-2.png', title: 'Naming · Adinkra', subtitle: 'Parchment & lineage detail', premium: false },
+  { variant: CERT_VARIANTS.NAMING_ADINKRA, src: '/images/cer-sample-2.png', title: 'Naming · Adinkra', subtitle: 'Parchment & lineage detail · Premium', premium: true },
   { variant: CERT_VARIANTS.NAMING_KENTE, src: '/images/cert-sample-3.png', title: 'Naming · Kente', subtitle: 'Bold kente frame · Premium', premium: true },
 ];
 
@@ -111,6 +112,8 @@ export default function ResultPage() {
   const [showPremiumGate, setShowPremiumGate] = useState(false);
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { products } = useCatalog();
+  const { requireAccount } = useAccountGate();
   const dob = params.get('dob');
   const gender = params.get('gender') || 'female';
   const day = dob ? getDay(dob) : null;
@@ -119,19 +122,19 @@ export default function ResultPage() {
   const dayBornMatchCount = useMemo(() => {
     if (!day) return 0;
     return products.filter((p) => p.bornDay === day).length;
-  }, [day]);
+  }, [day, products]);
 
   const dayBornPrimary = useMemo(() => {
     if (!day) return [];
     const match = products.filter((p) => p.bornDay === day);
     if (match.length > 0) return match;
     return products.filter((p) => p.bornDay === null);
-  }, [day]);
+  }, [day, products]);
 
   const otherProducts = useMemo(() => {
     if (!day) return [];
     return products.filter((p) => !dayBornPrimary.some((x) => x.id === p.id));
-  }, [day, dayBornPrimary]);
+  }, [day, products, dayBornPrimary]);
 
   useEffect(() => {
     if (!dob) return;
@@ -210,7 +213,7 @@ export default function ResultPage() {
 
   const birthdayWish = {
     today: { emoji: '🎂', title: 'Happy Birthday!', message: `Mama Africa wishes you, ${name}, a truly blessed and joyful birthday. May this day be filled with love, laughter, and all the gifts your spirit deserves.` },
-    passed: { emoji: '🎉', title: 'Belated Happy Birthday!', message: `Mama Africa sends warm belated birthday blessings to you, ${name}. Though the day has passed, the celebration of your life never ends.` },
+    passed: { emoji: '🎉', title: 'Belated Happy Birthday!', message: `Mama Africa sends warm belated birthday blessings to you, ${name}. Though the day has passed, the celebration of your birth never ends.` },
     upcoming: { emoji: '🌟', title: 'Happy Birthday in Advance!', message: `Mama Africa celebrates you, ${name}, and looks forward to your special day. May the coming birthday bring you immense joy and renewed purpose.` },
   }[birthdayStatus];
   const shareMeta = getShareUrl();
@@ -268,7 +271,7 @@ export default function ResultPage() {
       return;
     }
     setShowPremiumGate(false);
-    await runCertificatePipeline();
+    requireAccount('save your certificate', () => { runCertificatePipeline(); });
   }
 
   async function handlePreviewCertificate() {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { products } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { useAccountGate } from '../components/AccountGate';
 import ProductCard from '../components/ProductCard';
 import { buildTrackedExternalUrl } from '../utils/commerceLinks';
 import { trackEvent } from '../utils/analytics';
@@ -9,7 +10,10 @@ import { getOfficialPurchaseTarget } from '../utils/storefront';
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = products.find(p => p.id === Number(id));
+  const { products, findProduct, loading } = useCatalog();
+  const { requireAccount } = useAccountGate();
+  // The route carries either the old numeric id or a slug; findProduct accepts both.
+  const product = findProduct(id);
   const [selectedSize, setSelectedSize] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
@@ -45,6 +49,10 @@ export default function ProductDetailPage() {
   }, [imagePreviewOpen, closeImagePreview]);
 
   function handleExternalPurchase() {
+    requireAccount('buy from the store', () => completeExternalPurchase());
+  }
+
+  function completeExternalPurchase() {
     if (!targetUrl) {
       setFeedbackMsg('Store link is not configured yet.');
       setTimeout(() => setFeedbackMsg(''), 3000);
@@ -61,6 +69,16 @@ export default function ProductDetailPage() {
       selected_size: selectedSize || '',
     });
     window.open(trackedUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  // Until the catalogue lands, "not found" is not yet a true statement — say nothing rather
+  // than flashing an error at someone whose product is about to appear.
+  if (loading) {
+    return (
+      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', background: '#F3F1EC' }}>
+        <p style={{ color: '#8A6B2D', fontFamily: "'Cinzel', serif", letterSpacing: '0.12em' }}>Loading…</p>
+      </div>
+    );
   }
 
   if (!product) {

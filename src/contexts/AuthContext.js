@@ -1,150 +1,101 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  updatePassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-} from 'firebase/auth';
-import {
-  doc, setDoc, getDoc, getDocs, collection, serverTimestamp, query, orderBy,
-} from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { ADMIN_OTP_GATE_KEY, ADMIN_AFTER_LOGIN_KEY } from '../constants/adminSession';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import * as accountApi from '../utils/accountApi';
 
-const ADMIN_EMAIL = (process.env.REACT_APP_ADMIN_EMAIL || 'Mamaafricaafia@gmail.com').toLowerCase();
+// Website accounts now live in our own backend rather than Firebase. The shape of this
+// context is unchanged on purpose — every consumer keeps working — but `user` is a customer
+// record from PostgreSQL and there is no `isAdmin`: the site has no admin area any more.
+
 const AuthContext = createContext(null);
+
+/**
+ * The backend calls it `fullName`; the site's components were written against Firebase's
+ * `name`. Expose both rather than touching every consumer for a rename.
+ */
+function toUser(profile) {
+  return profile ? { ...profile, name: profile.fullName } : null;
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Resolve the stored token once on load. A missing or expired token simply means signed out.
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userEmail = (firebaseUser.email || '').toLowerCase();
-        const isAdmin = Boolean(userEmail) && userEmail === ADMIN_EMAIL;
-        try {
-          const ref = doc(db, 'users', firebaseUser.uid);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data();
-            // Always enforce isAdmin based on email, fix the record if needed
-            if (isAdmin && !data.isAdmin) {
-              await setDoc(ref, { ...data, isAdmin: true }, { merge: true });
-            }
-            setUser({ id: firebaseUser.uid, uid: firebaseUser.uid, ...data, isAdmin });
-          } else {
-            const profile = {
-              name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-              email: firebaseUser.email,
-              isAdmin,
-              createdAt: serverTimestamp(),
-            };
-            await setDoc(ref, profile);
-            setUser({ id: firebaseUser.uid, uid: firebaseUser.uid, ...profile });
-          }
-        } catch {
-          setUser({ id: firebaseUser.uid, uid: firebaseUser.uid, email: firebaseUser.email, isAdmin });
-        }
-      } else {
-        setUser(null);
-      }
-      setAuthLoading(false);
-    });
-    return unsub;
+    let cancelled = false;
+    accountApi
+      .fetchProfile()
+      .then((profile) => { if (!cancelled) setUser(toUser(profile)); })
+      .finally(() => { if (!cancelled) setAuthLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  async function login(email, password) {
+  const login = useCallback(async (email, password) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      if ((email || '').toLowerCase() === ADMIN_EMAIL) {
-        sessionStorage.setItem(ADMIN_OTP_GATE_KEY, '1');
-        sessionStorage.setItem(ADMIN_AFTER_LOGIN_KEY, '1');
-      }
+      setUser(toUser(await accountApi.login({ email, password })));
       return { success: true };
     } catch (err) {
-      console.error('Login error code:', err.code);
-      return { success: false, error: friendlyError(err.code) };
+      return { success: false, error: err.message };
     }
-  }
+  }, []);
 
-  async function signup(name, email, password) {
+  const signup = useCallback(async (name, email, password, extras = {}) => {
     try {
-      const { user: fb } = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, 'users', fb.uid), {
-        name,
-        email,
-        isAdmin: (email || '').toLowerCase() === ADMIN_EMAIL,
-        createdAt: serverTimestamp(),
-      });
+      setUser(toUser(await accountApi.signup({ fullName: name, email, password, ...extras })));
       return { success: true };
     } catch (err) {
-      return { success: false, error: friendlyError(err.code) };
+      return { success: false, error: err.message };
     }
-  }
+  }, []);
 
-  async function logout() {
-    sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-    await signOut(auth);
-  }
+  const logout = useCallback(async () => {
+    accountApi.logout();
+    setUser(null);
+  }, []);
 
-  async function resetPassword(email) {
+  const updateProfile = useCallback(async (profile) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      setUser(toUser(await accountApi.updateProfile(profile)));
       return { success: true };
     } catch (err) {
-      return { success: false, error: friendlyError(err.code) };
+      return { success: false, error: err.message };
     }
-  }
+  }, []);
 
-  async function changePassword(currentPassword, newPassword) {
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
     try {
-      const fb = auth.currentUser;
-      const credential = EmailAuthProvider.credential(fb.email, currentPassword);
-      await reauthenticateWithCredential(fb, credential);
-      await updatePassword(fb, newPassword);
+      await accountApi.changePassword(currentPassword, newPassword);
       return { success: true };
     } catch (err) {
-      return { success: false, error: friendlyError(err.code) };
+      return { success: false, error: err.message };
     }
-  }
+  }, []);
 
-  async function getAllUsers() {
+  const resetPassword = useCallback(async (email) => {
     try {
-      const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch {
-      return [];
+      const body = await accountApi.forgotPassword(email);
+      return { success: true, message: body?.message };
+    } catch (err) {
+      return { success: false, error: err.message };
     }
-  }
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, authLoading, login, signup, logout, resetPassword, changePassword, getAllUsers }}>
-      {children}
-    </AuthContext.Provider>
+  const completePasswordReset = useCallback(async (token, newPassword) => {
+    try {
+      await accountApi.resetPassword(token, newPassword);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, authLoading, login, signup, logout, updateProfile, changePassword,
+             resetPassword, completePasswordReset }),
+    [user, authLoading, login, signup, logout, updateProfile, changePassword,
+     resetPassword, completePasswordReset],
   );
-}
 
-function friendlyError(code) {
-  const map = {
-    'auth/user-not-found': 'No account found with this email.',
-    'auth/wrong-password': 'Incorrect password. Please check and try again.',
-    'auth/invalid-credential': 'Incorrect email or password.',
-    'auth/invalid-email': 'Please enter a valid email address.',
-    'auth/email-already-in-use': 'An account with this email already exists.',
-    'auth/weak-password': 'Password must be at least 6 characters.',
-    'auth/too-many-requests': 'Too many failed attempts. Please wait a few minutes and try again.',
-    'auth/requires-recent-login': 'Please sign in again before changing your password.',
-    'auth/network-request-failed': 'Network error. Please check your connection.',
-    'auth/operation-not-allowed': 'Email/Password sign-in is not enabled. Please enable it in the Firebase Console.',
-    'auth/user-disabled': 'This account has been disabled.',
-  };
-  return map[code] || `Sign-in failed (${code}). Please try again.`;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

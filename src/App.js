@@ -1,22 +1,26 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { CatalogProvider } from './contexts/CatalogContext';
+import { AccountGateProvider } from './components/AccountGate';
 import Navbar from './components/Navbar';
 import AnnouncementStrip from './components/AnnouncementStrip';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import WelcomePopup from './components/WelcomePopup';
+import FathersDayPopup from './components/FathersDayPopup';
+import SpinWheelPopup from './components/SpinWheelPopup';
+import { fathersDayState } from './utils/fathersDay';
+import { shouldShowSpin, markSpinShown } from './utils/spinGate';
 import HomePage from './pages/HomePage';
+import HomeWelcomePage from './pages/HomeWelcomePage';
 import ResultPage from './pages/ResultPage';
 import AboutPage from './pages/AboutPage';
 import StorePage from './pages/StorePage';
 import StoriesPage from './pages/StoriesPage';
 import LoginPage from './pages/LoginPage';
 import AccountPage from './pages/AccountPage';
-import AdminRouteGate from './components/AdminRouteGate';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminStoriesPage from './pages/AdminStoriesPage';
 import CultureHubPage from './pages/CultureHubPage';
 import VillageExperiencePage from './pages/VillageExperiencePage';
 import GhanaLandscapesPage from './pages/GhanaLandscapesPage';
@@ -33,15 +37,35 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsPage from './pages/TermsPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import CookieConsentBanner from './components/CookieConsentBanner';
+import AfiaChatAgent from './components/AfiaChatAgent';
+import SupportButton from './components/SupportButton';
 import { trackEvent, bootstrapAnalyticsFromStorage } from './utils/analytics';
+import { WELCOME_SEEN_KEY } from './constants/welcome';
 
 function AppShell() {
   const { authLoading } = useAuth();
   const location = useLocation();
+  const fathersDay = fathersDayState();
+  const [fdClosed, setFdClosed] = useState(false);
+  // Spin-the-Wheel pop-up leads on the home screen (new device, or once per 24h).
+  const [spinActive, setSpinActive] = useState(false);
+  useEffect(() => {
+    if (location.pathname === '/' && shouldShowSpin()) {
+      setSpinActive(true);
+      markSpinShown();
+    }
+    // run once on initial load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const isSpreadLayout =
     location.pathname !== '/' &&
     !location.pathname.startsWith('/store') &&
     !location.pathname.startsWith('/bundle');
+
+  const isCultureRoute = location.pathname.startsWith('/culture');
+  // Full-bleed doorway: the welcome screen carries no site chrome at all, so nothing
+  // interrupts the arrival.
+  const isWelcomeRoute = location.pathname === '/home-welcome';
 
   useEffect(() => {
     bootstrapAnalyticsFromStorage();
@@ -79,21 +103,25 @@ function AppShell() {
   return (
     <CartProvider>
       <CookieConsentBanner />
-      <WelcomePopup />
-      <AnnouncementStrip />
-      <Navbar />
+      {/* Pop-up priority on the home screen: Spin wheel first, then the
+          Father's Day card (in season), then the standard welcome pop-up. */}
+      {!isWelcomeRoute && spinActive && <SpinWheelPopup onClose={() => setSpinActive(false)} />}
+      {!isWelcomeRoute && !spinActive && fathersDay && <FathersDayPopup onClose={() => setFdClosed(true)} />}
+      {!isWelcomeRoute && !spinActive && (!fathersDay || fdClosed) && <WelcomePopup />}
+      {!isWelcomeRoute && <AnnouncementStrip />}
+      {!isWelcomeRoute && <Navbar />}
       <ScrollToTop />
       <div className={isSpreadLayout ? 'global-spread-layout' : ''}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingGate />} />
+          <Route path="/home-welcome" element={<HomeWelcomePage />} />
           <Route path="/result" element={<ResultPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/store" element={<StorePage />} />
+          <Route path="/ghana-world" element={<Navigate to="/store?tab=spotlight" replace />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/auth" element={<LoginPage />} />
           <Route path="/account" element={<AccountPage />} />
-          <Route path="/admin/stories" element={<AdminRouteGate><AdminStoriesPage /></AdminRouteGate>} />
-          <Route path="/admin/users" element={<AdminRouteGate><AdminUsersPage /></AdminRouteGate>} />
           <Route path="/culture" element={<CultureHubPage />} />
           <Route path="/culture/village" element={<VillageExperiencePage />} />
           <Route path="/culture/landscapes" element={<GhanaLandscapesPage />} />
@@ -112,9 +140,33 @@ function AppShell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
-      <Footer />
+      {!isWelcomeRoute && <Footer />}
+      {/* Afia has her own launcher on the culture pages; everywhere else the support button
+          is the way to reach her, so the two never sit on top of each other. */}
+      {!isWelcomeRoute && (isCultureRoute ? <AfiaChatAgent /> : <SupportButton />)}
     </CartProvider>
   );
+}
+
+/**
+ * The welcome screen is the first thing a visitor meets, then it steps aside.
+ *
+ * A redirect rather than a permanent route swap: once someone has been welcomed, clicking the
+ * logo or "Return Home" should take them home, not make them sit through the arrival again.
+ * The flag lives in sessionStorage, so a new visit is welcomed afresh while this one is not
+ * interrupted. Clear it and reload to see the doorway again.
+ */
+function LandingGate() {
+  const welcomed = (() => {
+    try {
+      return sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
+    } catch {
+      // Storage blocked: show the home page rather than trapping the visitor on the doorway.
+      return true;
+    }
+  })();
+
+  return welcomed ? <HomePage /> : <Navigate to="/home-welcome" replace />;
 }
 
 function NotFound() {
@@ -136,7 +188,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppShell />
+        <CatalogProvider>
+          <AccountGateProvider>
+            <AppShell />
+          </AccountGateProvider>
+        </CatalogProvider>
       </AuthProvider>
     </BrowserRouter>
   );

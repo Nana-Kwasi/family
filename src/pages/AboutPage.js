@@ -1,5 +1,5 @@
 import React from 'react';
-import { products } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
 import WhiteProductSection from '../components/ui/WhiteProductSection';
 import TestimonialsSection from '../components/ui/TestimonialsSection';
 import useSEO from '../hooks/useSEO';
@@ -27,11 +27,13 @@ const socials = [
   { name: 'Facebook', handle: 'Mama Africa', url: 'https://www.facebook.com/profile.php?id=61590121032184', icon: 'f' },
   { name: 'Instagram', handle: '@Mamaafricaafia', url: 'https://www.instagram.com/Mamaafricaafia', icon: '📸' },
   { name: 'TikTok', handle: '@Mamaafricacouture', url: 'https://www.tiktok.com/@Mamaafricacouture', icon: '🎵' },
-  { name: 'X (Twitter)', handle: '@mamaafrica', url: 'https://x.com/mamaafrica', icon: '𝕏' },
+  // X (Twitter) hidden until the correct profile handle is confirmed
+  // { name: 'X (Twitter)', handle: '@mamaafrica', url: 'https://x.com/mamaafrica', icon: '𝕏' },
   { name: 'YouTube', handle: '@mamaafricaafia', url: 'https://www.youtube.com/@mamaafricaafia', icon: '▶' },
 ];
 
 export default function AboutPage() {
+  const { products } = useCatalog();
   useSEO({
     title: 'About Mama Africa — Ghanaian Heritage & Akan Culture',
     description: 'Akwaaba! Meet Mama Africa Afia — the Friday-born Akan cultural ambassador bringing Ghana, the diaspora, and Akan heritage together through names, stories, music, and food.',
@@ -230,7 +232,7 @@ export default function AboutPage() {
         subtitle="Heritage names, culture, and gift-ready keepsakes for every generation"
         categories={[
           { label: 'T-Shirts',       products: products.filter(p => p.type === 'tshirt') },
-          { label: 'Baby Bodysuits', products: products.filter(p => p.type === 'babysuit') },
+          { label: 'Baby Onesies', products: products.filter(p => p.type === 'babysuit') },
         ]}
         viewAllHref="/store"
         viewAllLabel="View Full Shop"

@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getActiveDayFeatured, getTodayBornDay } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { getTodayBornDay } from '../utils/dayBorn';
 
 export default function WelcomePopup() {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const { activeDayFeatured, loading } = useCatalog();
   const today = getTodayBornDay();
-  const featured = getActiveDayFeatured(3);
+  const featured = activeDayFeatured(3);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 900);
     return () => clearTimeout(t);
   }, []);
 
-  if (!visible) return null;
+  // The pop-up is built around three product cards, so there is nothing to show until the
+  // catalogue has arrived.
+  if (!visible || loading || featured.length === 0) return null;
 
   function close() { setVisible(false); }
   function goStore() { setVisible(false); navigate('/store'); }
@@ -110,7 +114,7 @@ export default function WelcomePopup() {
             lineHeight: 1.7, textAlign: 'center', marginBottom: 22,
             maxWidth: 460, marginLeft: 'auto', marginRight: 'auto',
           }}>
-            In Akan tradition, the day you were born gives you a name, a spirit, and a legacy.
+            In Akan tradition, the day you were born gives you a name, a spiritual identity, and a legacy.
             Today we celebrate the <strong style={{ color: '#E8CB82', fontStyle: 'normal' }}>{today}-born</strong> —
             carry the name with our premium pieces.
           </p>

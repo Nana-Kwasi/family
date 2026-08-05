@@ -1,6 +1,6 @@
 {
   "name": "ghana-birthday-pro-clean",
-  "version": "0.4.3",
+  "version": "0.5.3",
   "private": true,
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -22,7 +22,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "generate:qr": "cd qr-code && npm install && npm run generate"
   },
   "eslintConfig": {
     "extends": [

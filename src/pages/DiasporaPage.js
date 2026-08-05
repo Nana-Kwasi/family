@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  collection, addDoc, query, orderBy, onSnapshot,
-  where, serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { fetchDiasporaStories, fetchReviews, submitDiasporaStory, submitReview } from '../utils/cultureApi';
 import { notifyAfiaBookFeedback } from '../utils/emailjs';
 
 const countries = [
@@ -54,37 +50,12 @@ function StoryModal({ story, onClose }) {
       return undefined;
     }
 
-    const q = query(
-      collection(db, 'diasporaReviews'),
-      where('storyId', '==', story.id),
-      orderBy('createdAt', 'desc'),
-    );
-    return onSnapshot(
-      q,
-      (snap) => setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-      () => {
-        // Fallback: avoid hard runtime crash if Firestore watch target fails in dev/runtime.
-        const fallbackQ = query(
-          collection(db, 'diasporaReviews'),
-          where('storyId', '==', story.id),
-        );
-        onSnapshot(
-          fallbackQ,
-          (fallbackSnap) => {
-            const sorted = fallbackSnap.docs
-              .map((d) => ({ id: d.id, ...d.data() }))
-              .sort((a, b) => {
-                const ta = a.createdAt?.toMillis?.() ?? 0;
-                const tb = b.createdAt?.toMillis?.() ?? 0;
-                return tb - ta;
-              });
-            setReviews(sorted);
-          },
-          () => setReviews([]),
-        );
-      },
-    );
-  }, [story.id]);
+    let cancelled = false;
+    fetchReviews('DIASPORA', story.id)
+      .then((list) => { if (!cancelled) setReviews(list); })
+      .catch(() => { if (!cancelled) setReviews([]); });
+    return () => { cancelled = true; };
+  }, [story.id, submitted]);
 
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -97,13 +68,13 @@ function StoryModal({ story, onClose }) {
     setSubmitting(true);
     setFormError('');
     try {
-      await addDoc(collection(db, 'diasporaReviews'), {
-        storyId: story.id,
-        storyAuthor: story.name,
+      await submitReview({
+        subject: 'DIASPORA',
+        subjectId: story.id,
+        subjectTitle: story.name,
         name: form.name.trim() || 'Anonymous',
         rating: form.rating,
         comment: form.comment.trim(),
-        createdAt: serverTimestamp(),
       });
       await notifyAfiaBookFeedback({
         name: form.name || 'Anonymous',
@@ -308,14 +279,14 @@ export default function DiasporaPage() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
+  // Re-read after a submission so the writer sees their own story on the wall.
   useEffect(() => {
-    const q = query(collection(db, 'diasporaStories'), orderBy('createdAt', 'desc'));
-    return onSnapshot(
-      q,
-      (snap) => setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-      () => setStories([]),
-    );
-  }, []);
+    let cancelled = false;
+    fetchDiasporaStories()
+      .then((list) => { if (!cancelled) setStories(list); })
+      .catch(() => { if (!cancelled) setStories([]); });
+    return () => { cancelled = true; };
+  }, [submitted]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -323,9 +294,11 @@ export default function DiasporaPage() {
     if (form.story.trim().length < 50) { setError('Please share a bit more — at least 50 characters.'); return; }
     setSubmitting(true); setError('');
     try {
-      await addDoc(collection(db, 'diasporaStories'), {
-        ...form, name: form.name.trim(), story: form.story.trim(),
-        createdAt: serverTimestamp(),
+      await submitDiasporaStory({
+        name: form.name.trim(),
+        country: form.country,
+        akanName: form.akanName,
+        story: form.story.trim(),
       });
       setSubmitted(true);
       setForm({ name: '', country: '', akanName: '', story: '' });

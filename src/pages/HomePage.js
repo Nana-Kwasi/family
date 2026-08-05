@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { trackEvent } from '../utils/analytics';
 import useSEO from '../hooks/useSEO';
 import TestimonialsSection from '../components/ui/TestimonialsSection';
-import { getTodayBornDay, pickActiveDayByType } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { getTodayBornDay } from '../utils/dayBorn';
 
 const pi = (file) => encodeURI(`/images/${file}`);
 
@@ -14,36 +15,47 @@ const pi = (file) => encodeURI(`/images/${file}`);
 // All slides are 3:2 (matching the carousel frame) so they fill edge-to-edge
 // with nothing cropped. Day-born lifestyle slides show the names with the
 // Sankofa & Gye Nyame Adinkra symbols.
+const CERT_CAPTION = 'Generate your premium, authentic day-born name certificate — for free.';
 const HERO_SLIDES = [
+  // Match-day promo — auto-hidden 24h after it went live (set 2026-06-17 23:12 UTC).
+  { src: pi('world-cup/wc-commercial.jpeg'), pos: 'center', expiresAt: '2026-06-18T23:12:51Z' },
+  { src: pi('commercial-images/com-1.png') },
+  { src: pi('commercial-images/com-2.png') },
   { src: pi('commercial-images/mama africa website commercial.png') },
-  { src: pi('commercial-images/mama africa commercial pt 2 image 1.png') },
+  { src: pi('commercial-images/family-cert-wide.png'), pos: 'center', caption: CERT_CAPTION },
   { src: pi('commercial-images/day-born-babies-wide.png') },
-  { src: pi('sunday-borns/kwasi/kwasi-shirt-gyenyame-1.jpeg') },
+  { src: pi('sunday-borns/kwasi/kwasi-shirt-gyenyame-1.0.png') },
+  { src: pi('commercial-images/old-woman-cert-wide.png'), pos: 'center', caption: CERT_CAPTION },
   { src: pi('commercial-images/mama affrica commercial image 4 revised.png') },
   { src: pi('sunday-borns/akosua/akosua-mug-sankofa-1.jpeg') },
   { src: pi('commercial-images/Website image 5.png') },
   { src: pi('commercial-images/website commercial image 6.png') },
 ];
 
-const TOTAL = HERO_SLIDES.length;
+// Drop any time-limited slide whose expiry has passed (evaluated on page load).
+const activeHeroSlides = () => HERO_SLIDES.filter(
+  (s) => !s.expiresAt || Date.now() < new Date(s.expiresAt).getTime(),
+);
 
 // ─── Hero Carousel ────────────────────────────────────────────────────────────
 function HeroCarousel() {
   const navigate = useNavigate();
+  const slides = useMemo(activeHeroSlides, []);
+  const total = slides.length;
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef(null);
 
   const goTo = useCallback((idx) => {
-    setCurrent(((idx % TOTAL) + TOTAL) % TOTAL);
-  }, []);
+    setCurrent(((idx % total) + total) % total);
+  }, [total]);
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      if (!paused) setCurrent((c) => (c + 1) % TOTAL);
+      if (!paused) setCurrent((c) => (c + 1) % total);
     }, 6000);
-  }, [paused]);
+  }, [paused, total]);
 
   useEffect(() => {
     startTimer();
@@ -52,13 +64,13 @@ function HeroCarousel() {
 
   // Preload next image
   useEffect(() => {
-    const next = (current + 1) % TOTAL;
+    const next = (current + 1) % total;
     const img = new window.Image();
-    img.src = HERO_SLIDES[next].src;
-  }, [current]);
+    img.src = slides[next].src;
+  }, [current, total, slides]);
 
-  const slide = HERO_SLIDES[current];
-  const progress = ((current + 1) / TOTAL) * 100;
+  const slide = slides[current];
+  const progress = ((current + 1) / total) * 100;
 
   return (
     <div
@@ -105,7 +117,7 @@ function HeroCarousel() {
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%',
-          objectFit: slide.fit || 'cover', objectPosition: slide.fit === 'contain' ? 'center' : 'top center',
+          objectFit: slide.fit || 'cover', objectPosition: slide.pos || (slide.fit === 'contain' ? 'center' : 'top center'),
           animation: 'heroFadeIn 0.85s ease forwards',
           display: 'block',
         }}
@@ -127,6 +139,17 @@ function HeroCarousel() {
           animation: 'heroTextIn 0.7s ease 0.15s both',
         }}
       >
+        {slide.caption && (
+          <p style={{
+            fontFamily: "'EB Garamond', serif",
+            fontSize: 'clamp(15px, 2.4vw, 22px)',
+            color: '#FAF0E0', lineHeight: 1.45, fontStyle: 'italic',
+            maxWidth: 560, marginBottom: 18,
+            textShadow: '0 2px 12px rgba(0,0,0,0.6)',
+          }}>
+            {slide.caption}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 22 }}>
           <button
             className="btn-gold"
@@ -150,7 +173,7 @@ function HeroCarousel() {
             <div style={{ height: '100%', width: `${progress}%`, background: '#C9A558', borderRadius: 2, transition: 'width 0.5s ease' }} />
           </div>
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: 'rgba(201,165,88,0.55)', letterSpacing: '0.12em' }}>
-            {String(current + 1).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}
+            {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </span>
         </div>
       </div>
@@ -214,12 +237,13 @@ function TrustBar() {
 // always surfaces the active day-born (e.g. Tuesday-born styles on a Tuesday).
 const CATEGORIES = [
   { label: 'T-Shirts', type: 'tshirt', filter: 'T-Shirts', fallback: pi('monday-borns/kwadwo/kojo-shirt-gyenyame-1.jpeg') },
-  { label: 'Baby Bodysuits', type: 'babysuit', filter: 'Babysuits', fallback: pi('akua-infant/wed-infant.png') },
+  { label: 'Baby Onesies', type: 'babysuit', filter: 'Baby Onesies', fallback: pi('akua-infant/wed-infant.png') },
   { label: 'Mugs', type: 'mug', filter: 'Mugs', fallback: pi('tuesday-borns/abena/abena-mug-gyenyame-1.png') },
 ];
 
 function ShopByCategory() {
   const navigate = useNavigate();
+  const { pickActiveDayByType } = useCatalog();
   const today = getTodayBornDay();
   return (
     <section style={{ padding: 'clamp(32px,5vw,64px) clamp(16px,3vw,36px)', background: '#FAF9F7' }}>
@@ -463,8 +487,9 @@ export default function HomePage() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { to: '/store',   icon: '🛍️', label: 'The Store',         desc: 'Browse the full collection of heritage T-shirts, mugs, baby bodysuits, and hoodies' },
-              { to: '/stories', icon: '📚', label: 'Stories & Culture',  desc: 'Read Ghanaian folktales, proverbs, and the full book "Outdooring (Aba-Dinto)"' },
+              { to: '/store',   icon: '🛍️', label: 'The Store',         desc: 'Browse the full collection of heritage T-shirts, mugs, baby onesies, and hoodies' },
+              // Stories & Culture card hidden for now
+              // { to: '/stories', icon: '📚', label: 'Stories & Culture',  desc: 'Read Ghanaian folktales, proverbs, and the full book "Outdooring (Aba-Dinto)"' },
               { to: '/about',   icon: '👑', label: 'About Mama Africa',  desc: 'The mission, voice, and cultural legacy behind MamaAfrica Couture' },
             ].map(({ to, icon, label, desc }) => (
               <Link key={to} to={to} style={{ textDecoration: 'none' }}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { products, resolveStoreBundle } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { useAccountGate } from '../components/AccountGate';
 import ProductCard from '../components/ProductCard';
 import { buildTrackedExternalUrl } from '../utils/commerceLinks';
 import { trackEvent } from '../utils/analytics';
@@ -22,8 +23,13 @@ export default function BundleDetailPage() {
   const { bundleId } = useParams();
   const navigate = useNavigate();
   const [previewProduct, setPreviewProduct] = useState(null);
+  const { products, resolveBundle, loading } = useCatalog();
+  const { requireAccount } = useAccountGate();
 
-  const bundle = useMemo(() => (bundleId ? resolveStoreBundle(bundleId) : null), [bundleId]);
+  const bundle = useMemo(
+    () => (bundleId ? resolveBundle(bundleId) : null),
+    [bundleId, resolveBundle],
+  );
 
   useEffect(() => {
     if (!bundle) return;
@@ -46,6 +52,16 @@ export default function BundleDetailPage() {
     };
   }, [previewProduct, closePreview]);
 
+  // A missing bundle and a bundle that has not arrived yet look identical; only claim the
+  // former once the catalogue has actually loaded.
+  if (loading) {
+    return (
+      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', background: '#F3F1EC' }}>
+        <p style={{ color: '#8A6B2D', fontFamily: "'Cinzel', serif", letterSpacing: '0.12em' }}>Loading…</p>
+      </div>
+    );
+  }
+
   if (!bundle) {
     return (
       <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', padding: 20, background: '#F3F1EC' }}>
@@ -65,6 +81,10 @@ export default function BundleDetailPage() {
   const mergedPerfectFor = [...new Set(bundle.items.flatMap((p) => p.perfectFor || []))].slice(0, 6);
 
   function openExternalBuy(product) {
+    requireAccount('buy from the store', () => completeExternalBuy(product));
+  }
+
+  function completeExternalBuy(product) {
     const { url: targetUrl } = getOfficialPurchaseTarget(product);
     if (!targetUrl) return;
     const trackedUrl = buildTrackedExternalUrl(targetUrl, {

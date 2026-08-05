@@ -9,7 +9,7 @@ const TESTIMONIALS = [
     img: '/images/afia day born white t shirt.jpeg',
   },
   {
-    quote: "The baby bodysuit arrived gift-wrapped and looking absolutely beautiful. My cousin cried when she saw 'Kwame Saturday Born' on her son's first outfit. This is a gift people remember.",
+    quote: "The baby onesie arrived gift-wrapped and looking absolutely beautiful. My cousin cried when she saw 'Kwame Saturday Born' on her son's first outfit. This is a gift people remember.",
     name: 'Yaa M.',
     location: 'Toronto, Canada',
     day: 'Thursday Born',

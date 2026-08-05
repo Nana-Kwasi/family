@@ -1,0 +1,163 @@
+spring:
+  application:
+    name: mama-africa-ai
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:mama_africa_ai}}
+    username: ${DB_USERNAME:mama}
+    password: ${DB_PASSWORD:mama}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_UPLOAD_SIZE:25MB}
+      max-request-size: ${MAX_UPLOAD_SIZE:25MB}
+
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+  shutdown: graceful
+
+# --- AI provider -------------------------------------------------------------
+# Development : provider=OLLAMA base-url=http://localhost:11434      model=gemma3:1b
+# Production  : provider=OPENAI base-url=https://<runpod>/v1         model=google/gemma-3-12b-it
+# Only these environment variables change between environments — never the code.
+ai:
+  provider: ${AI_PROVIDER:OLLAMA}
+  base-url: ${AI_BASE_URL:http://localhost:11434}
+  model: ${AI_MODEL:gemma3:1b}
+  api-key: ${AI_API_KEY:}
+  temperature: ${AI_TEMPERATURE:0.7}
+  max-tokens: ${AI_MAX_TOKENS:1024}
+  timeout: ${AI_TIMEOUT:120s}
+  log-requests: ${AI_LOG_REQUESTS:false}
+
+  # IN_PROCESS runs all-MiniLM-L6-v2 (384 dims) inside the JVM: no extra service, works offline.
+  # Switch to OLLAMA (e.g. nomic-embed-text) or OPENAI for stronger embeddings — then re-index,
+  # because a Qdrant collection's vector size is fixed at creation.
+  embedding:
+    provider: ${EMBEDDING_PROVIDER:IN_PROCESS}
+    base-url: ${EMBEDDING_BASE_URL:http://localhost:11434}
+    model: ${EMBEDDING_MODEL:nomic-embed-text}
+    api-key: ${EMBEDDING_API_KEY:}
+
+  # Override with the AI_SYSTEM_PROMPT environment variable, which takes precedence over this file.
+  # Do not wrap this in ${...:default} — the default of a placeholder is literal text, so the YAML
+  # folded-block marker would end up inside the prompt.
+  system-prompt: >-
+    You are Mama Africa AI.
+    You are an expert on African history, culture, tourism, food, languages and traditions.
+    Always answer accurately.
+    If information exists inside the knowledge base, prioritize it.
+    If the answer is not found, use your general knowledge.
+    Keep responses conversational and educational.
+
+# --- Knowledge base ----------------------------------------------------------
+qdrant:
+  host: ${QDRANT_HOST:localhost}
+  port: ${QDRANT_PORT:6334}
+  collection: ${QDRANT_COLLECTION:mama_africa_knowledge}
+  api-key: ${QDRANT_API_KEY:}
+  use-tls: ${QDRANT_USE_TLS:false}
+
+rag:
+  enabled: ${RAG_ENABLED:true}
+  chunk-size: ${RAG_CHUNK_SIZE:900}
+  chunk-overlap: ${RAG_CHUNK_OVERLAP:150}
+  max-results: ${RAG_MAX_RESULTS:5}
+  # Cosine similarity below this is treated as irrelevant and dropped.
+  min-score: ${RAG_MIN_SCORE:0.6}
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-in-production-this-must-be-at-least-32-characters-long}
+      expiration: ${JWT_EXPIRATION:12h}
+      issuer: mama-africa-ai
+    bootstrap:
+      email: ${ADMIN_EMAIL:admin@mamaafrica.ai}
+      password: ${ADMIN_PASSWORD:ChangeMe123!}
+      full-name: ${ADMIN_NAME:Super Admin}
+    # Blank = /api/chat is open. Set it in production and have the website send X-Api-Key.
+    public-api-key: ${PUBLIC_API_KEY:}
+  cors:
+    # Patterns, not plain origins — the bean uses setAllowedOriginPatterns, so a wildcard
+    # port is legal and every local dev server works without editing this file.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:[*],http://127.0.0.1:[*]}
+
+# --- Chat spend ceiling ------------------------------------------------------
+# Total chat calls allowed across all visitors in 24 hours. Inference is billed per token,
+# and per-caller limits can be defeated by rotating addresses, so this is the only limit that
+# actually bounds the bill. Raise it as real traffic grows.
+chat:
+  daily-cap: ${CHAT_DAILY_CAP:2000}
+
+# --- Email -------------------------------------------------------------------
+# Optional. Leave MAIL_HOST blank and the application still runs — support notifications and
+# password-reset emails are skipped and logged rather than failing the request that caused them.
+spring.mail:
+  host: ${MAIL_HOST:}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:}
+  password: ${MAIL_PASSWORD:}
+  properties:
+    mail.smtp.auth: ${MAIL_AUTH:true}
+    mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+
+app.mail:
+  from: ${MAIL_FROM:}
+  # Where support enquiries are announced. Usually the same address the website shows.
+  support-inbox: ${SUPPORT_INBOX:}
+  # Origin used to build password-reset links, e.g. https://mamaafricaofficial.com
+  site-url: ${PUBLIC_SITE_URL:http://localhost:3002}
+
+# --- Mama Africa Market ------------------------------------------------------
+market:
+  # Absolute path to the website's public/images folder. Read-only, and used for one thing:
+  # letting the product editor offer a picker of images the site already ships. Leave blank
+  # and the picker is simply empty — nothing else in the Market module depends on it.
+  image-root: ${MARKET_IMAGE_ROOT:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    # Email is optional by design, so it must not decide whether the application is healthy.
+    # Left on, an unconfigured (or briefly unreachable) SMTP host reports the whole service
+    # DOWN and a readiness probe takes it out of rotation over a notification channel.
+    mail:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.mamaafrica.ai: ${LOG_LEVEL:INFO}

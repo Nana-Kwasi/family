@@ -1,0 +1,12 @@
+{
+  "name": "mama-africa-qr",
+  "private": true,
+  "description": "Branded QR codes for mamaafricaofficial.com (business cards & print)",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.5"
+  }
+}

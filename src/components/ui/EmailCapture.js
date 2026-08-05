@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { subscribe } from '../../utils/cultureApi';
 
 /**
  * EmailCapture
@@ -36,13 +35,12 @@ export default function EmailCapture({
     setStatus('loading');
     setErrorMsg('');
     try {
-      await addDoc(collection(db, 'subscribers'), {
+      await subscribe({
         email: trimmed,
         akanName: akanName || '',
-        day: day || '',
+        dayBorn: day || '',
         dob: dob || '',
         source,
-        createdAt: serverTimestamp(),
       });
       setStatus('done');
       if (onSuccess) onSuccess(trimmed);

@@ -1,13 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { products, STORE_BUNDLE_SETS, DAY_NAMES } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
+import { useAccountGate } from '../components/AccountGate';
+import { DAY_NAMES } from '../utils/dayBorn';
 import ProductCard from '../components/ProductCard';
+import GhanaSpotlight from '../components/GhanaSpotlight';
 import { buildTrackedExternalUrl } from '../utils/commerceLinks';
 import { trackEvent } from '../utils/analytics';
 import { getOfficialPurchaseTarget } from '../utils/storefront';
 import useSEO from '../hooks/useSEO';
 
-const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies', 'Babysuits'];
+const categories = ['All', 'Mugs', 'T-Shirts', 'Hoodies', 'Baby Onesies'];
 
 const DAY_FILTERS = ['All Days', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -20,18 +23,27 @@ export default function StorePage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeDayFilter, setActiveDayFilter] = useState('All Days');
   const [sortBy, setSortBy] = useState('featured');
+  const [view, setView] = useState('heritage'); // 'heritage' | 'spotlight'
+  const { products, bundles: catalogBundles, loading, error, reload } = useCatalog();
+  const { requireAccount } = useAccountGate();
 
   // Apply category/day pre-filters when arriving from a homepage link
-  // (e.g. /store?category=Mugs&day=Tuesday).
+  // (e.g. /store?category=Mugs&day=Tuesday), or open the Ghana Spotlight tab.
   useEffect(() => {
     const cat = searchParams.get('category');
     if (cat && categories.includes(cat)) setActiveFilter(cat);
     const day = searchParams.get('day');
     if (day && DAY_FILTERS.includes(day)) setActiveDayFilter(day);
+    if (searchParams.get('tab') === 'spotlight') setView('spotlight');
   }, [searchParams]);
 
+  const spotlightProducts = useMemo(
+    () => products.filter((p) => p.collection === 'Ghana Spotlight'),
+    [products],
+  );
+
   useSEO({
-    title: 'Shop Akan Heritage Gifts — Day-Born T-Shirts, Mugs & Baby Bodysuits',
+    title: 'Shop Akan Heritage Gifts — Day-Born T-Shirts, Mugs & Baby Onesies',
     description: 'Shop premium Ghanaian day-born heritage gifts. T-shirts, mugs, baby bodysuits, hoodies, and gift bundles for every Akan day name. Ships worldwide.',
     image: '/images/group of day borns.jpeg',
   });
@@ -41,11 +53,12 @@ export default function StorePage() {
   }, [activeFilter, activeDayFilter, sortBy]);
 
   const filtered = products.filter((p) => {
+    if (p.collection === 'Ghana Spotlight') return false; // jerseys live in the Ghana Spotlight tab
     const typeMatch = activeFilter === 'All'
       || (activeFilter === 'Mugs' && p.type === 'mug')
       || (activeFilter === 'T-Shirts' && p.type === 'tshirt')
       || (activeFilter === 'Hoodies' && p.type === 'hoodie')
-      || (activeFilter === 'Babysuits' && p.type === 'babysuit');
+      || (activeFilter === 'Baby Onesies' && p.type === 'babysuit');
     const dayMatch = activeDayFilter === 'All Days' || p.bornDay === activeDayFilter;
     return typeMatch && dayMatch;
   });
@@ -108,7 +121,37 @@ export default function StorePage() {
   const spotlight = arranged[0];
   const rest = arranged.slice(1);
 
+  // Grouped-by-day view (the default "Featured" sort): each day-born's products
+  // are kept together in their own section/row block, ordered by name then
+  // product type so a day's row shows its mugs, tees and baby suits together —
+  // and no two days ever share a row. Explicit price/name sorts stay flat.
+  const dayGroups = useMemo(() => {
+    if (sortBy !== 'featured') return null;
+    const spotId = arranged[0] ? arranged[0].id : null;
+    const typeRank = { mug: 0, tshirt: 1, hoodie: 2, babysuit: 3 };
+    const firstName = (p) => p.name.split(' ')[0];
+    const sections = [];
+    DAY_NAMES.forEach((day) => {
+      const items = filtered
+        .filter((p) => p.bornDay === day && p.id !== spotId)
+        .sort((a, b) => firstName(a).localeCompare(firstName(b))
+          || ((typeRank[a.type] ?? 9) - (typeRank[b.type] ?? 9))
+          || a.id - b.id);
+      if (items.length) {
+        const names = [...new Set(items.map(firstName))].join(' · ');
+        sections.push({ day, names, items });
+      }
+    });
+    const other = filtered.filter((p) => !DAY_NAMES.includes(p.bornDay) && p.id !== spotId);
+    if (other.length) sections.push({ day: 'Other', names: '', items: other });
+    return sections;
+  }, [filtered, sortBy, arranged]);
+
   function openExternalBuy(product) {
+    requireAccount('buy from the store', () => completeExternalBuy(product));
+  }
+
+  function completeExternalBuy(product) {
     const { url: targetUrl } = getOfficialPurchaseTarget(product);
     if (!targetUrl) return;
     const trackedUrl = buildTrackedExternalUrl(targetUrl, {
@@ -125,22 +168,55 @@ export default function StorePage() {
 
   const bundles = useMemo(
     () =>
-      STORE_BUNDLE_SETS.map((b) => ({
-        id: b.id,
+      catalogBundles.map((b) => ({
+        id: b.slug,
         title: b.title,
         subtitle: b.subtitle,
-        desc: b.desc,
-        items: b.productIds.map((id) => products.find((p) => p.id === id)).filter(Boolean),
+        desc: b.description,
+        // Bundle items are summaries; swap in the full entry so cards get images and links.
+        items: b.items.map((item) => products.find((p) => p.slug === item.slug)).filter(Boolean),
       })),
-    [],
+    [catalogBundles, products],
   );
 
   const heroShowcaseProducts = useMemo(
     () => STORE_HERO_IMAGE_IDS.map((id) => products.find((p) => p.id === id)).filter(Boolean),
-    [],
+    [products],
   );
 
   const productCount = filtered.length;
+
+  // The shop comes from the Mama Africa backend. When it is unreachable the honest thing is
+  // to say so and offer a retry — an empty grid reads as "sold out of everything".
+  if (loading || error) {
+    return (
+      <div
+        className="page-wrapper store-shell"
+        style={{
+          background: '#F3F1EC', minHeight: '70vh', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24,
+        }}
+      >
+        {loading ? (
+          <p style={{ color: '#8A6B2D', fontFamily: "'Cinzel', serif", letterSpacing: '0.14em' }}>
+            Loading the shop…
+          </p>
+        ) : (
+          <div style={{ maxWidth: 420 }}>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: '#1a1a1a', marginBottom: 10 }}>
+              The shop is not available right now
+            </p>
+            <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 14, color: '#5a5a5a', marginBottom: 22 }}>
+              We could not reach our catalogue. This is usually temporary.
+            </p>
+            <button type="button" className="btn-gold" style={{ width: 'auto', padding: '12px 28px' }} onClick={reload}>
+              Try again
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper store-shell" style={{ background: '#F3F1EC' }}>
@@ -191,6 +267,37 @@ export default function StorePage() {
         </a>
       </div>
 
+      {/* ── Section tabs: Heritage Collection ⇆ Ghana Spotlight ─────────────── */}
+      <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: '12px 20px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'inline-flex', background: '#F0ECE3', borderRadius: 999, padding: 4, gap: 4, border: '1px solid rgba(0,0,0,0.07)', maxWidth: '100%' }}>
+          {[
+            { id: 'heritage', label: 'Heritage Collection' },
+            { id: 'spotlight', label: '🇬🇭 Ghana Souvenir' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => { setView(t.id); trackEvent('store_tab', { tab: t.id }); }}
+              style={{
+                border: 'none', cursor: 'pointer', borderRadius: 999, whiteSpace: 'nowrap',
+                padding: '9px clamp(14px,3vw,22px)', fontFamily: "'Montserrat', sans-serif",
+                fontSize: 'clamp(11px,2.6vw,13px)', fontWeight: 700, letterSpacing: '0.03em',
+                background: view === t.id ? 'linear-gradient(135deg,#c4963e,#9a7224)' : 'transparent',
+                color: view === t.id ? '#fff' : '#6a6a6a',
+                boxShadow: view === t.id ? '0 4px 12px rgba(154,114,36,0.3)' : 'none',
+                transition: 'all .2s',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {view === 'spotlight' ? (
+        <GhanaSpotlight products={spotlightProducts} />
+      ) : (
+      <>
       <section className="store-hero-wrap" style={{ padding: '38px 20px 26px', background: 'linear-gradient(180deg, rgba(158, 116, 40, 0.22) 0%, rgba(243, 241, 236, 0) 72%)' }}>
         <div className="store-hero-card" style={{
           width: '100%',
@@ -583,11 +690,20 @@ export default function StorePage() {
             </button>
           </div>
         ) : (
+          // Day-grouped order in a single continuous grid: each day-born's
+          // products stay together (ordered by name then type), but the grid
+          // flows so the next day-born fills any empty slots left in the
+          // previous day's last row — no gaps. Each card's own day-born badge
+          // keeps the grouping clear. Explicit price/name sorts stay flat.
           <div className="product-grid store-product-grid" style={{ width: '100%', maxWidth: 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {(rest.length ? rest : arranged).map((p, idx) => <ProductCard key={p.id} product={p} animationIndex={idx} />)}
+            {(dayGroups ? dayGroups.flatMap((g) => g.items) : (rest.length ? rest : arranged))
+              .map((p, idx) => <ProductCard key={p.id} product={p} animationIndex={idx} />)}
           </div>
         )}
       </section>
+      </>
+      )}
+
     </div>
   );
 }

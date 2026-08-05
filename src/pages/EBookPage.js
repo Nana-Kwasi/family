@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  collection, addDoc, query, orderBy, onSnapshot,
-  serverTimestamp, getDocs,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { fetchReviews, fetchStories, recordBookRead, submitReview } from '../utils/cultureApi';
 import { bookSections, bookMeta } from '../data/bookContent';
 import { notifyAfiaBookFeedback } from '../utils/emailjs';
 
@@ -290,21 +286,27 @@ export default function EBookPage() {
     const key = 'afia_book_read';
     if (!sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1');
-      addDoc(collection(db, 'bookReads'), { readAt: serverTimestamp() }).catch(() => {});
+      recordBookRead();
     }
   }, []);
 
   // Load stories
   useEffect(() => {
-    const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, snap => setStories(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    let cancelled = false;
+    fetchStories()
+      .then((list) => { if (!cancelled) setStories(list); })
+      .catch(() => { if (!cancelled) setStories([]); });
+    return () => { cancelled = true; };
   }, []);
 
   // Load reviews
   useEffect(() => {
-    const q = query(collection(db, 'bookReviews'), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
-  }, []);
+    let cancelled = false;
+    fetchReviews('BOOK')
+      .then((list) => { if (!cancelled) setReviews(list); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [submitted]);
 
   function navigate(dir) {
     const next = bookSections[currentIndex + dir];
@@ -323,11 +325,12 @@ export default function EBookPage() {
     if (!reviewForm.comment.trim()) { setReviewError('Please write a comment.'); return; }
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'bookReviews'), {
+      await submitReview({
+        subject: 'BOOK',
+        subjectTitle: 'Outdooring (Aba-Dinto)',
         name: reviewForm.name.trim() || 'Anonymous',
         rating: reviewForm.rating,
         comment: reviewForm.comment.trim(),
-        createdAt: serverTimestamp(),
       });
       await notifyAfiaBookFeedback({
         name: reviewForm.name || 'Anonymous',

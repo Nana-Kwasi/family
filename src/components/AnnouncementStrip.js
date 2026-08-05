@@ -1,23 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useCatalog } from '../contexts/CatalogContext';
 
-const messages = [
+// Shown when no promotion is scheduled, so the strip never renders empty.
+const DEFAULT_MESSAGES = [
   'Gift-ready heritage collection now available',
   'Heritage names, culture & keepsakes for the whole family',
-  'Limited bundles: Signature · Everyday · Legacy',
   'Order early for smooth delivery and tracking',
 ];
 
 export default function AnnouncementStrip() {
   const [idx, setIdx] = useState(0);
   const [visible, setVisible] = useState(true);
+  const { promotionsFor } = useCatalog();
+
+  // Promotions are managed in the admin console; whatever is live wins over the defaults.
+  const messages = useMemo(() => {
+    const live = promotionsFor('ANNOUNCEMENT_STRIP').map((p) => p.headline).filter(Boolean);
+    return live.length ? live : DEFAULT_MESSAGES;
+  }, [promotionsFor]);
+
+  // A shorter promotion list can leave the index past the end after a reload.
+  useEffect(() => {
+    setIdx((current) => (current < messages.length ? current : 0));
+  }, [messages]);
 
   useEffect(() => {
+    if (messages.length < 2) return undefined;
     const t = setInterval(() => {
       setVisible(false);
       setTimeout(() => { setIdx(i => (i + 1) % messages.length); setVisible(true); }, 400);
     }, 4500);
     return () => clearInterval(t);
-  }, []);
+  }, [messages]);
 
   return (
     <div style={{
@@ -38,7 +52,7 @@ export default function AnnouncementStrip() {
         transition: 'opacity 0.4s ease',
         textAlign: 'center',
       }}>
-        🌸 &nbsp; {messages[idx]}
+        🌸 &nbsp; {messages[idx] ?? messages[0]}
       </span>
     </div>
   );

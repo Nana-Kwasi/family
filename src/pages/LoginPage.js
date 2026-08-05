@@ -1,682 +1,359 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { sendAdminOtpEmail } from '../utils/emailjs';
-import { db } from '../firebase';
-import { ADMIN_OTP_GATE_KEY, ADMIN_AFTER_LOGIN_KEY } from '../constants/adminSession';
-import { verifyAdminSecurityAnswers, ADMIN_SECURITY_QUESTIONS } from '../utils/adminSecurityChallenges';
+import useSEO from '../hooks/useSEO';
+import AuthCarousel from '../components/AuthCarousel';
+import PolicyConsent from '../components/PolicyConsent';
 
-const ADMIN_EMAIL = (process.env.REACT_APP_ADMIN_EMAIL || 'Mamaafricaafia@gmail.com').toLowerCase();
-const OTP_TTL_MS = 5 * 60 * 1000;
-const OTP_MAX_ATTEMPTS = 5;
-const OTP_LOCK_MS = 5 * 60 * 1000;
-const OTP_DOC_ID = 'primary';
-const SECURITY_MAX_ATTEMPTS = 5;
+// Customer sign-in. The admin one-time-password flow that used to live here is gone — the
+// website no longer has an admin area at all.
+//
+// Light by design: the rest of the site is dark and heritage-toned, so a white page here reads
+// as a clean, deliberate moment rather than another dim panel. Gold carries the identity.
 
-function friendlyOtpSendError(err) {
-  const status = Number(err?.status);
-  if ([502, 503, 504].includes(status)) {
-    return 'Email service is temporarily unavailable. Please try again in a few moments.';
-  }
-  if (status === 429) {
-    return 'Too many email requests right now. Please wait a minute and try again.';
-  }
-  if (status === 403) {
-    return 'Email service rejected this request. Check EmailJS template and account limits.';
-  }
-  return 'Could not send OTP email. Please verify EmailJS settings and try again.';
-}
+const GOLD = '#C9A558';
+const GOLD_DEEP = '#8B6914';
+const INK = '#1C1410';
 
-function InputField({ id, label, type, placeholder, value, onChange }) {
-  return (
-    <div className="form-field">
-      <label className="field-label" htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        type={type || 'text'}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="afia-input-plain"
-        style={type === 'password' ? {
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Verdana, sans-serif',
-          letterSpacing: '0.18em',
-          color: '#EDD9BC',
-        } : {}}
-        required
-      />
-    </div>
-  );
-}
+const inputBase = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '13px 15px',
+  borderRadius: 10,
+  border: '1px solid rgba(201,165,88,0.45)',
+  background: '#FFFDF9',
+  color: GOLD_DEEP,
+  fontFamily: "'Montserrat', sans-serif",
+  fontSize: 15,
+  outline: 'none',
+  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+};
+
+const labelStyle = {
+  display: 'block',
+  fontFamily: "'Montserrat', sans-serif",
+  fontSize: 11,
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: GOLD_DEEP,
+  marginBottom: 7,
+};
 
 export default function LoginPage() {
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const { user, login, signup, resetPassword } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [mode, setMode] = useState('signin'); // signin | signup | forgot
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [forgotEmail, setForgotEmail] = useState('');
-  const [showForgot, setShowForgot] = useState(false);
-  const [showOtpCard, setShowOtpCard] = useState(false);
-  const [otpInput, setOtpInput] = useState('');
-  const [otpExpiresAt, setOtpExpiresAt] = useState(0);
-  const [otpLockUntil, setOtpLockUntil] = useState(0);
-  const [otpStatus, setOtpStatus] = useState('');
-  const [showOtpSentBanner, setShowOtpSentBanner] = useState(false);
-  const [nowTs, setNowTs] = useState(Date.now());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showEmailFailRecovery, setShowEmailFailRecovery] = useState(false);
-  const [showSecurityFlow, setShowSecurityFlow] = useState(false);
-  const [securityAnswers, setSecurityAnswers] = useState(['', '', '']);
-  const [securityAttempts, setSecurityAttempts] = useState(0);
-  const [securityError, setSecurityError] = useState('');
-  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState([]);
 
-  const { user, login, resetPassword, logout, authLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from || '/';
-  const otpDocRef = doc(db, 'adminOtpSessions', OTP_DOC_ID);
+  useSEO({
+    title: 'Sign In — Mama Africa Official',
+    description: 'Sign in or create your Mama Africa account.',
+  });
 
-  function generateOtpCode() {
-    return String(Math.floor(100000 + Math.random() * 900000));
-  }
-
-  function triggerOtpSentBanner() {
-    setShowOtpSentBanner(true);
-    window.setTimeout(() => setShowOtpSentBanner(false), 3200);
-  }
-
-  async function getOtpSessionFromDb() {
-    const snap = await getDoc(otpDocRef);
-    return snap.exists() ? snap.data() : null;
-  }
-
-  function openExistingOtpSession(expiresAt, lockUntil = 0) {
-    setOtpLockUntil(lockUntil || 0);
-    setOtpStatus('Using your existing active OTP. Check your email and enter the code.');
-    setOtpInput('');
-    setOtpExpiresAt(expiresAt || 0);
-    setShowOtpCard(true);
-    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-  }
-
-  async function issueOtp() {
-    const otpCode = generateOtpCode();
-    const expiresAt = Date.now() + OTP_TTL_MS;
-    setOtpLockUntil(0);
-    await sendAdminOtpEmail({ otp_code: otpCode, expires_minutes: 5 });
-    await setDoc(otpDocRef, {
-      email: ADMIN_EMAIL,
-      otpCode,
-      expiresAt,
-      used: false,
-      attempts: 0,
-      maxAttempts: OTP_MAX_ATTEMPTS,
-      lockUntil: 0,
-      issuedAt: Date.now(),
-      consumedAt: null,
-    });
-    setOtpExpiresAt(expiresAt);
-    setOtpStatus('');
-    setOtpInput('');
-    setShowOtpCard(true);
-    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-    return { otpCode, expiresAt };
-  }
+  const destination = location.state?.from || '/account';
 
   useEffect(() => {
-    if (!showOtpCard) return undefined;
-    const timer = setInterval(() => setNowTs(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [showOtpCard]);
+    if (user) navigate(destination, { replace: true });
+  }, [user, destination, navigate]);
 
-  useEffect(() => {
-    if (!user || showOtpCard || showEmailFailRecovery || showSecurityFlow) return;
-    if (sessionStorage.getItem(ADMIN_OTP_GATE_KEY)) return;
-    navigate(from, { replace: true });
-  }, [user, showOtpCard, showEmailFailRecovery, showSecurityFlow, navigate, from]);
-
-  useEffect(() => {
-    if (!user || authLoading) return;
-    if (!sessionStorage.getItem(ADMIN_OTP_GATE_KEY)) return;
-    if (sessionStorage.getItem(ADMIN_AFTER_LOGIN_KEY)) return;
-    if (showOtpCard || showEmailFailRecovery || showSecurityFlow) return;
-
-    let cancelled = false;
-    (async () => {
-      const snap = await getDoc(otpDocRef);
-      const session = snap.exists() ? snap.data() : null;
-      if (cancelled) return;
-      if (session?.lockUntil && session.lockUntil > Date.now()) {
-        sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-        sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-        await logout();
-        setError(`Too many invalid OTP attempts. Try again in ${Math.ceil((session.lockUntil - Date.now()) / 60000)} minute(s).`);
-        return;
-      }
-      if (
-        session &&
-        session.email === ADMIN_EMAIL &&
-        !session.used &&
-        session.expiresAt > Date.now()
-      ) {
-        openExistingOtpSession(session.expiresAt, session.lockUntil || 0);
-        return;
-      }
-      setShowEmailFailRecovery(true);
-    })();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- gate restore: uid + UI flags only (logout/otpDocRef stable)
-  }, [user?.uid, authLoading, showOtpCard, showEmailFailRecovery, showSecurityFlow]);
-
-  useEffect(() => {
-    if (!showOtpCard) return;
-    if (otpLockUntil > 0 && nowTs >= otpLockUntil) {
-      setOtpLockUntil(0);
-      setError('');
-      setOtpStatus('Lock expired. You can verify or resend OTP now.');
-    }
-  }, [showOtpCard, otpLockUntil, nowTs]);
-
-  const showAdminVerifyShell = Boolean(
-    user &&
-    sessionStorage.getItem(ADMIN_OTP_GATE_KEY) &&
-    !showOtpCard &&
-    !showEmailFailRecovery &&
-    !showSecurityFlow,
-  );
-
-  async function handleLogin(e) {
-    e.preventDefault();
+  function switchMode(next) {
+    setMode(next);
     setError('');
     setSuccess('');
-    setShowEmailFailRecovery(false);
-    setShowSecurityFlow(false);
-    setSecurityAnswers(['', '', '']);
-    setSecurityAttempts(0);
-    setSecurityError('');
-    setLoading(true);
-    const email = loginForm.email.trim().toLowerCase();
-    if (email !== ADMIN_EMAIL) {
-      setLoading(false);
-      setError('Only the authorized admin email can sign in.');
-      return;
-    }
-    const result = await login(loginForm.email, loginForm.password);
-    if (!result.success) {
-      setLoading(false);
-      setError(result.error);
-      return;
-    }
-    try {
-      const currentSession = await getOtpSessionFromDb();
-      if (currentSession?.lockUntil && currentSession.lockUntil > Date.now()) {
-        const minsLeft = Math.ceil((currentSession.lockUntil - Date.now()) / 60000);
-        sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-        sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-        await logout();
-        setLoading(false);
-        setError(`Too many invalid OTP attempts. Try again in ${minsLeft} minute(s).`);
-        return;
-      }
-      if (
-        currentSession &&
-        currentSession.email === ADMIN_EMAIL &&
-        !currentSession.used &&
-        currentSession.expiresAt > Date.now()
-      ) {
-        openExistingOtpSession(currentSession.expiresAt, currentSession.lockUntil || 0);
-        setLoading(false);
-        return;
-      }
-      await issueOtp();
-      triggerOtpSentBanner();
-      setLoading(false);
-      setSuccess('OTP sent to admin email. Enter it below.');
-    } catch (err) {
-      console.error('OTP send error:', err);
-      sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-      setLoading(false);
-      setShowOtpCard(false);
-      setError(friendlyOtpSendError(err));
-      setShowEmailFailRecovery(true);
-    }
+    // Sign-up is taller than sign-in. Without this the page keeps the old scroll offset and
+    // the new heading ends up behind the fixed navbar.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async function handleVerifyOtp(e) {
+  async function handleSignIn(e) {
     e.preventDefault();
     setError('');
-    setOtpStatus('');
-    setOtpVerifying(true);
-    try {
-      const session = await getOtpSessionFromDb();
-      if (!session) {
-        setError('OTP session missing. Please sign in again.');
-        sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-        sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-        await logout();
-        setShowOtpCard(false);
-        return;
-      }
-
-      if (session.lockUntil && session.lockUntil > Date.now()) {
-        const minsLeft = Math.ceil((session.lockUntil - Date.now()) / 60000);
-        setOtpLockUntil(session.lockUntil);
-        setError(`Too many invalid attempts. Locked for ${minsLeft} minute(s).`);
-        return;
-      }
-
-      if (session.used) {
-        setError('This OTP has already been used. Please request a new OTP.');
-        sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-        sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-        await logout();
-        setShowOtpCard(false);
-        return;
-      }
-      if (Date.now() > session.expiresAt) {
-        await updateDoc(otpDocRef, { used: true, consumedAt: Date.now() });
-        setError('OTP expired. Please sign in again.');
-        sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-        sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-        await logout();
-        setShowOtpCard(false);
-        return;
-      }
-      if (otpInput.trim() !== session.otpCode) {
-        const nextAttempts = (session.attempts || 0) + 1;
-        if (nextAttempts >= OTP_MAX_ATTEMPTS) {
-          const lockUntil = Date.now() + OTP_LOCK_MS;
-          await updateDoc(otpDocRef, {
-            attempts: nextAttempts,
-            lockUntil,
-            used: true,
-            consumedAt: Date.now(),
-          });
-          setOtpLockUntil(lockUntil);
-          setError('Too many invalid OTP attempts. Locked for 5 minutes.');
-        } else {
-          await updateDoc(otpDocRef, { attempts: nextAttempts });
-          setError(`Invalid OTP code. ${OTP_MAX_ATTEMPTS - nextAttempts} attempt(s) left.`);
-        }
-        return;
-      }
-
-      await updateDoc(otpDocRef, {
-        used: true,
-        consumedAt: Date.now(),
-        attempts: (session.attempts || 0) + 1,
-      });
-      sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-      sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-      setOtpStatus('OTP verified. Redirecting...');
-      setShowOtpCard(false);
-      navigate(from, { replace: true });
-    } finally {
-      setOtpVerifying(false);
-    }
-  }
-
-  async function resendOtp() {
-    setError('');
-    setOtpStatus('');
     setLoading(true);
-    try {
-      const session = await getOtpSessionFromDb();
-      if (session?.lockUntil && session.lockUntil > Date.now()) {
-        const minsLeft = Math.ceil((session.lockUntil - Date.now()) / 60000);
-        setError(`OTP resend blocked. Try again in ${minsLeft} minute(s).`);
-        return;
-      }
-      await issueOtp();
-      triggerOtpSentBanner();
-      setOtpStatus('A fresh OTP has been sent.');
-    } catch (err) {
-      console.error('OTP resend error:', err);
-      setError(friendlyOtpSendError(err));
-    } finally {
-      setLoading(false);
-    }
+    const result = await login(form.email.trim(), form.password);
+    setLoading(false);
+    if (!result.success) setError(result.error);
   }
 
-  async function cancelOtpFlow() {
-    await updateDoc(otpDocRef, { used: true, consumedAt: Date.now() }).catch(() => {});
-    sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-    setShowOtpCard(false);
-    setOtpInput('');
-    setOtpStatus('');
-    await logout();
-  }
-
-  async function exitRecoveryLogout() {
-    sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-    sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-    setShowEmailFailRecovery(false);
-    setShowSecurityFlow(false);
-    setSecurityAnswers(['', '', '']);
-    setSecurityError('');
-    setError('');
-    await logout();
-  }
-
-  async function handleSecurityVerify(e) {
+  async function handleSignUp(e) {
     e.preventDefault();
-    setSecurityError('');
-    setLoading(true);
-    try {
-      const ok = await verifyAdminSecurityAnswers(
-        securityAnswers[0],
-        securityAnswers[1],
-        securityAnswers[2],
-      );
-      if (!ok) {
-        const next = securityAttempts + 1;
-        setSecurityAttempts(next);
-        if (next >= SECURITY_MAX_ATTEMPTS) {
-          sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-          sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-          setShowEmailFailRecovery(false);
-          setShowSecurityFlow(false);
-          await logout();
-          setError('Too many failed attempts. Please sign in again.');
-          return;
-        }
-        setSecurityError(`Answers do not match. ${SECURITY_MAX_ATTEMPTS - next} attempt(s) left.`);
-        return;
-      }
-      await updateDoc(otpDocRef, { used: true, consumedAt: Date.now() }).catch(() => {});
-      sessionStorage.removeItem(ADMIN_OTP_GATE_KEY);
-      sessionStorage.removeItem(ADMIN_AFTER_LOGIN_KEY);
-      setShowEmailFailRecovery(false);
-      setShowSecurityFlow(false);
-      navigate(from, { replace: true });
-    } finally {
-      setLoading(false);
+    setError('');
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
     }
+    setLoading(true);
+    const result = await signup(form.name.trim(), form.email.trim(), form.password, {
+      acceptedPolicies,
+    });
+    setLoading(false);
+    if (!result.success) setError(result.error);
   }
 
   async function handleForgot(e) {
     e.preventDefault();
-    setError(''); setSuccess(''); setLoading(true);
-    const result = await resetPassword(forgotEmail);
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    const result = await resetPassword(forgotEmail.trim());
     setLoading(false);
-    if (result.success) {
-      setSuccess('Password reset email sent! Check your inbox.');
-    } else {
-      setError(result.error);
-    }
+    if (result.success) setSuccess(result.message || 'Check your inbox for a reset link.');
+    else setError(result.error);
   }
 
-  if (showAdminVerifyShell) {
-    return (
-      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 20px' }}>
-        <p style={{ color: '#BA9D7C', fontFamily: "'Cinzel', serif", letterSpacing: '0.14em', fontSize: 14, textAlign: 'center' }}>
-          {loading || sessionStorage.getItem(ADMIN_AFTER_LOGIN_KEY)
-            ? 'Securing your session…'
-            : 'Restoring verification…'}
-        </p>
-      </div>
-    );
-  }
+  const heading = mode === 'signup' ? 'Create your account'
+    : mode === 'forgot' ? 'Reset your password'
+      : 'Welcome back';
 
-  if (user && showEmailFailRecovery) {
-    return (
-      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 20px' }}>
-        <div style={{ width: '100%', maxWidth: 480 }}>
-          <div className="afia-card" style={{ border: '1px solid rgba(201,165,88,0.45)' }}>
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11, letterSpacing: '0.2em', color: '#C9A558', textTransform: 'uppercase' }}>
-                Alternate verification
-              </p>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, color: '#EDD9BC', marginTop: 8 }}>
-                {showSecurityFlow ? 'Security questions' : 'Email could not be sent'}
-              </h2>
-            </div>
-            {!showSecurityFlow ? (
-              <>
-                <p style={{ color: '#BA9D7C', fontSize: 15, lineHeight: 1.65, marginBottom: 20, textAlign: 'center' }}>
-                  {error || 'We could not reach your inbox with a one-time code. You can answer private verification questions instead, or sign out and try again later.'}
-                </p>
-                <button type="button" className="btn-gold" style={{ width: '100%', marginBottom: 12 }} onClick={() => { setShowSecurityFlow(true); setSecurityError(''); }}>
-                  Try another way to verify
-                </button>
-                <button type="button" className="btn-ghost" style={{ width: '100%' }} onClick={exitRecoveryLogout}>
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <form onSubmit={handleSecurityVerify}>
-                {[0, 1, 2].map((i) => (
-                  <div className="form-field" key={i}>
-                    <label className="field-label" htmlFor={`sec-q-${i}`}>{ADMIN_SECURITY_QUESTIONS[i]}</label>
-                    <input
-                      id={`sec-q-${i}`}
-                      className="afia-input-plain"
-                      value={securityAnswers[i]}
-                      onChange={(e) => {
-                        const next = [...securityAnswers];
-                        next[i] = e.target.value;
-                        setSecurityAnswers(next);
-                      }}
-                      autoComplete="off"
-                      required
-                    />
-                  </div>
-                ))}
-                {securityError && <div className="error-msg" style={{ marginBottom: 14 }}>{securityError}</div>}
-                <button type="submit" className="btn-gold" style={{ width: '100%', marginBottom: 10 }} disabled={loading}>
-                  {loading ? 'Checking…' : 'Verify answers'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  style={{ width: '100%' }}
-                  disabled={loading}
-                  onClick={() => { setShowSecurityFlow(false); setSecurityError(''); }}
-                >
-                  Back
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showForgot) {
-    return (
-      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 20px' }}>
-        <div style={{ width: '100%', maxWidth: 440 }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 26, color: '#C9A558', letterSpacing: '0.12em', marginBottom: 8 }}>Reset Password</h1>
-            <p style={{ color: '#7C5F48', fontStyle: 'italic', fontSize: 15 }}>We'll send a reset link to your email</p>
-          </div>
-          <div className="afia-card">
-            <form onSubmit={handleForgot}>
-              <div className="form-field">
-                <label className="field-label" htmlFor="forgot-email">Email Address</label>
-                <input
-                  id="forgot-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={forgotEmail}
-                  onChange={e => setForgotEmail(e.target.value)}
-                  className="afia-input-plain"
-                  required
-                />
-              </div>
-              {error && <div className="error-msg" style={{ marginBottom: 16 }}>{error}</div>}
-              {success && <div className="success-msg" style={{ marginBottom: 16 }}>{success}</div>}
-              <button type="submit" className="btn-gold" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Reset Email'}
-              </button>
-            </form>
-            <button
-              onClick={() => { setShowForgot(false); setError(''); setSuccess(''); }}
-              style={{ background: 'none', border: 'none', color: '#BA9D7C', cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.1em', marginTop: 16, width: '100%', textAlign: 'center', textTransform: 'uppercase' }}
-            >
-              ← Back to Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (showOtpCard) {
-    const secondsLeft = Math.max(0, Math.ceil((otpExpiresAt - nowTs) / 1000));
-    const lockSecondsLeft = Math.max(0, Math.ceil((otpLockUntil - nowTs) / 1000));
-    const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
-    const ss = String(secondsLeft % 60).padStart(2, '0');
-    const lockMm = String(Math.floor(lockSecondsLeft / 60)).padStart(2, '0');
-    const lockSs = String(lockSecondsLeft % 60).padStart(2, '0');
-    const isLocked = lockSecondsLeft > 0;
-    return (
-      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 20px' }}>
-        <style>{'@keyframes loginOtpVerifySpin{to{transform:rotate(360deg)}}'}</style>
-        <div style={{ width: '100%', maxWidth: 460 }}>
-          <div className="afia-card" style={{ border: '1px solid rgba(201,165,88,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.35)' }}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 12, letterSpacing: '0.18em', color: '#C9A558', textTransform: 'uppercase', marginBottom: 8 }}>
-                Two-Factor Verification
-              </p>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, color: '#EDD9BC', marginBottom: 8 }}>
-                Enter One-Time Password
-              </h2>
-              <p style={{ color: '#BA9D7C', fontSize: 16, fontStyle: 'italic' }}>
-                Enter the 6-digit OTP sent to your email.
-              </p>
-            </div>
-
-            {showOtpSentBanner && (
-              <div style={{
-                marginBottom: 16,
-                padding: '12px 14px',
-                borderRadius: 10,
-                border: '1px solid rgba(34,197,94,0.45)',
-                background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(16,185,129,0.12))',
-                color: '#86efac',
-                textAlign: 'center',
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: 13,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-              }}>
-                OTP code has been sent to your email.
-              </div>
-            )}
-
-            <form onSubmit={handleVerifyOtp}>
-              <div className="form-field">
-                <label className="field-label" htmlFor="otp-code">OTP Code</label>
-                <input
-                  id="otp-code"
-                  value={otpInput}
-                  onChange={e => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="afia-input-plain"
-                  placeholder="000000"
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  disabled={otpVerifying || isLocked}
-                  style={{
-                    textAlign: 'center',
-                    letterSpacing: '0.5em',
-                    fontSize: 24,
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                  }}
-                />
-              </div>
-
-              <p style={{ textAlign: 'center', color: '#C9A558', fontSize: 14, marginBottom: 16 }}>
-                Expires in: <strong>{mm}:{ss}</strong>
-              </p>
-              {isLocked && (
-                <p style={{ textAlign: 'center', color: '#f87171', fontSize: 14, marginBottom: 16 }}>
-                  Locked: <strong>{lockMm}:{lockSs}</strong> remaining
-                </p>
-              )}
-
-              {error && <div className="error-msg" style={{ marginBottom: 14 }}>{error}</div>}
-              {otpStatus && <div className="success-msg" style={{ marginBottom: 14 }}>{otpStatus}</div>}
-
-              <button type="submit" className="btn-gold" disabled={loading || otpVerifying || otpInput.length !== 6 || isLocked}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                  {otpVerifying ? (
-                    <span
-                      aria-hidden
-                      style={{
-                        width: 18,
-                        height: 18,
-                        border: '2px solid rgba(28,14,4,0.2)',
-                        borderTopColor: '#1C0E04',
-                        borderRadius: '50%',
-                        animation: 'loginOtpVerifySpin 0.65s linear infinite',
-                        flexShrink: 0,
-                      }}
-                    />
-                  ) : null}
-                  {otpVerifying ? 'Verifying…' : 'Verify OTP'}
-                </span>
-              </button>
-            </form>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-              <button type="button" className="btn-ghost" style={{ flex: 1 }} onClick={resendOtp} disabled={loading || otpVerifying || isLocked}>
-                Resend OTP
-              </button>
-              <button type="button" className="btn-ghost" style={{ flex: 1 }} onClick={cancelOtpFlow} disabled={loading || otpVerifying}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const blurb = mode === 'signup'
+    ? 'Keep your Akan name and your certificates together, and pick up where you left off.'
+    : mode === 'forgot'
+      ? 'Enter your email and we will send you a link to set a new password.'
+      : 'Sign in to reach your certificates and continue where you left off.';
 
   return (
-    <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 72px' }}>
-      <div style={{ width: '100%', maxWidth: 560 }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 11, letterSpacing: '0.22em', color: '#9E7D42', textTransform: 'uppercase', marginBottom: 12 }}>
-            Admin Access
-          </div>
-          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(26px, 3vw, 34px)', color: '#C9A558', letterSpacing: '0.1em', marginBottom: 10 }}>
-            Welcome, Mama Africa
+    // page-wrapper carries the 108px offset that clears the fixed strip and navbar. Dropping
+    // it is what tucked the card under the header.
+    <div
+      className="page-wrapper ma-auth-page"
+      style={{ background: '#FFFFFF', display: 'flex', flexDirection: 'column' }}
+    >
+      <style>{`
+        /* Width lives in a class, not an inline style: global-spread-layout force-stretches
+           any direct child of .page-wrapper carrying an inline max-width, which flattened
+           this card across the whole viewport. */
+        /* Full-bleed: the carousel and the form own the screen, and the only thing below
+           them is a thin footer strip. 108px is the fixed strip + navbar above. */
+        .ma-auth-page { padding-bottom: 0 !important; }
+        .ma-auth-card {
+          flex: 1;
+          width: 100%;
+          display: grid;
+          /* The carousel takes the larger share — it is what gives the page its warmth —
+             while the form keeps a comfortable reading width rather than stretching. */
+          grid-template-columns: minmax(0, 1.5fr) minmax(400px, 0.8fr);
+          background: #fff;
+          min-height: calc(100vh - 108px - 84px);
+        }
+        .ma-auth-carousel {
+          position: relative;
+          overflow: hidden;
+          background: #1C1410;
+        }
+        .ma-auth-form {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .ma-auth-input:focus {
+          border-color: ${GOLD} !important;
+          box-shadow: 0 0 0 3px rgba(201,165,88,0.18);
+        }
+        .ma-auth-input::placeholder { color: rgba(139,105,20,0.4); }
+        .ma-auth-footer {
+          width: 100%;
+          padding: 18px 24px;
+          border-top: 1px solid rgba(201,165,88,0.28);
+          background: #FFFDF9;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: center;
+          justify-content: center;
+        }
+        .ma-auth-footer a:hover { color: ${GOLD} !important; }
+        @media (max-width: 1000px) {
+          .ma-auth-card { grid-template-columns: 1fr; min-height: 0; }
+          /* Kept on narrow screens, just shorter — losing it entirely strips the page of
+             everything that made it feel like Mama Africa. */
+          .ma-auth-carousel { min-height: 260px; }
+          .ma-auth-form { padding: 40px 26px !important; }
+        }
+        @media (max-width: 520px) {
+          .ma-auth-carousel { min-height: 190px; }
+        }
+      `}</style>
+
+      <div className="ma-auth-card">
+        <AuthCarousel />
+
+        {/* Form */}
+        <div className="ma-auth-form" style={{ padding: '48px 44px' }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: INK, margin: '0 0 8px' }}>
+            {heading}
           </h1>
-          <p style={{ color: '#7C5F48', fontStyle: 'italic', fontSize: 15, lineHeight: 1.7 }}>
-            This portal is exclusively for Mama Africa.<br />
-            Not for public access.
+          <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 16.5, lineHeight: 1.6, color: '#6B5B4A', margin: '0 0 28px' }}>
+            {blurb}
           </p>
-        </div>
 
-        <div className="afia-card" style={{ maxWidth: 560, margin: '0 auto', padding: '22px 18px' }}>
-          <form onSubmit={handleLogin}>
-            <InputField id="login-email" label="Email Address" type="email" placeholder="your@email.com"
-              value={loginForm.email} onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))} />
-            <InputField id="login-password" label="Password" type="password" placeholder="••••••••"
-              value={loginForm.password} onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))} />
-
-            <div style={{ textAlign: 'right', marginTop: -12, marginBottom: 20 }}>
-              <button type="button" onClick={() => { setShowForgot(true); setError(''); }}
-                style={{ background: 'none', border: 'none', color: '#9E7D42', cursor: 'pointer', fontSize: 13, fontFamily: "'EB Garamond', serif", fontStyle: 'italic', textDecoration: 'underline' }}>
-                Forgot password?
-              </button>
+          {error && (
+            <div style={{ background: '#FDECEA', border: '1px solid #F2C4BE', color: '#A33', borderRadius: 10, padding: '11px 14px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", marginBottom: 18 }}>
+              {error}
             </div>
+          )}
+          {success && (
+            <div style={{ background: '#EFF7EE', border: '1px solid #C6E2C2', color: '#3B6B36', borderRadius: 10, padding: '11px 14px', fontSize: 14, fontFamily: "'Montserrat', sans-serif", marginBottom: 18 }}>
+              {success}
+            </div>
+          )}
 
-            {error && <div className="error-msg" style={{ marginBottom: 16 }}>{error}</div>}
-            <button type="submit" className="btn-gold" disabled={loading} style={{ padding: '11px 14px', fontSize: 13, letterSpacing: '0.14em' }}>
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-          </form>
+          {mode === 'forgot' ? (
+            <form onSubmit={handleForgot}>
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle} htmlFor="forgot-email">Email</label>
+                <input
+                  id="forgot-email" type="email" className="ma-auth-input" style={inputBase}
+                  value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com" autoComplete="email" required
+                />
+              </div>
+              <PrimaryButton loading={loading}>Send reset link</PrimaryButton>
+              <TextLink onClick={() => switchMode('signin')} centered>Back to sign in</TextLink>
+            </form>
+          ) : (
+            <form onSubmit={mode === 'signup' ? handleSignUp : handleSignIn}>
+              {mode === 'signup' && (
+                <div style={{ marginBottom: 18 }}>
+                  <label style={labelStyle} htmlFor="name">Your name</label>
+                  <input
+                    id="name" type="text" className="ma-auth-input" style={inputBase}
+                    value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="Adwoa Boateng" autoComplete="name" required
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: 18 }}>
+                <label style={labelStyle} htmlFor="email">Email</label>
+                <input
+                  id="email" type="email" className="ma-auth-input" style={inputBase}
+                  value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  placeholder="you@example.com" autoComplete="email" required
+                />
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label style={labelStyle} htmlFor="password">Password</label>
+                <input
+                  id="password" type="password" className="ma-auth-input" style={inputBase}
+                  value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                  placeholder={mode === 'signup' ? 'At least 8 characters' : '••••••••'}
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required
+                />
+              </div>
+
+              {mode === 'signup' && (
+                <PolicyConsent accepted={acceptedPolicies} onChange={setAcceptedPolicies} />
+              )}
+
+              {mode === 'signin' && (
+                <div style={{ textAlign: 'right', marginBottom: 18 }}>
+                  <TextLink onClick={() => switchMode('forgot')}>Forgot your password?</TextLink>
+                </div>
+              )}
+
+
+              <PrimaryButton loading={loading}>
+                {mode === 'signup' ? 'Create account' : 'Sign in'}
+              </PrimaryButton>
+
+              <p style={{ textAlign: 'center', marginTop: 20, fontFamily: "'Montserrat', sans-serif", fontSize: 14, color: '#6B5B4A' }}>
+                {mode === 'signup' ? 'Already have an account?' : 'New to Mama Africa?'}{' '}
+                <TextLink onClick={() => switchMode(mode === 'signup' ? 'signin' : 'signup')} strong>
+                  {mode === 'signup' ? 'Sign in' : 'Create one'}
+                </TextLink>
+              </p>
+            </form>
+          )}
         </div>
-
-        <p style={{ textAlign: 'center', marginTop: 20, color: '#7C5F48', fontSize: 14, fontStyle: 'italic' }}>
-          Gye Nyame — Except God, I fear none
-        </p>
       </div>
+
+      <AuthFooter />
     </div>
+  );
+}
+
+/**
+ * Footer for the sign-in page only. The site's main footer is dark and heavy; on a white page
+ * it would fight the card, so this is a lighter version carrying the same essentials.
+ */
+function AuthFooter() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="ma-auth-footer">
+      {/* Deliberately two lines: the screen belongs to the carousel and the form, and a tall
+          footer would take space from both for information nobody came here to read. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', alignItems: 'baseline', justifyContent: 'center' }}>
+        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 12, letterSpacing: '0.18em', color: GOLD_DEEP }}>
+          MAMA AFRICA OFFICIAL
+        </span>
+        <span style={{ color: 'rgba(139,105,20,0.35)' }}>&middot;</span>
+        <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 14.5, fontStyle: 'italic', color: '#6B5B4A' }}>
+          Heritage names, culture &amp; keepsakes for every generation
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', justifyContent: 'center', alignItems: 'baseline' }}>
+        <a href="mailto:Mamaafricaafia@gmail.com" style={footerLink}>Mamaafricaafia@gmail.com</a>
+        <a href="/privacy-policy" style={footerLink}>Privacy</a>
+        <a href="/terms" style={footerLink}>Terms</a>
+        <a href="/shipping-returns" style={footerLink}>Shipping &amp; Returns</a>
+        <span style={{ fontFamily: "'Montserrat', sans-serif", fontSize: 11.5, color: '#9A8B7A' }}>
+          &copy; {year} Ghana
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+const footerLink = {
+  fontFamily: "'Montserrat', sans-serif",
+  fontSize: 13,
+  color: GOLD_DEEP,
+  textDecoration: 'none',
+  borderBottom: '1px solid rgba(201,165,88,0.45)',
+  paddingBottom: 2,
+};
+
+function PrimaryButton({ loading, children }) {
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      style={{
+        width: '100%', padding: '14px', borderRadius: 999, border: 'none',
+        background: `linear-gradient(135deg, ${GOLD} 0%, #B98F3E 55%, ${GOLD_DEEP} 100%)`,
+        color: '#fff', fontFamily: "'Montserrat', sans-serif", fontSize: 13,
+        fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+        cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1,
+        boxShadow: '0 8px 20px rgba(201,165,88,0.32)',
+      }}
+    >
+      {loading ? 'Please wait…' : children}
+    </button>
+  );
+}
+
+function TextLink({ onClick, children, centered, strong }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+        color: GOLD_DEEP, fontFamily: "'Montserrat', sans-serif",
+        fontSize: 13.5, fontWeight: strong ? 700 : 500, textDecoration: 'underline',
+        display: centered ? 'block' : 'inline', margin: centered ? '16px auto 0' : 0,
+      }}
+    >
+      {children}
+    </button>
   );
 }

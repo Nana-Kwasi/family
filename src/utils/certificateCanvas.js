@@ -9,6 +9,18 @@ export const CERT_VARIANTS = {
 const CERT_W = 1920;
 const CERT_H = 1152;
 
+// Pick a render scale that stays within every device's canvas limits.
+// iOS Safari caps a canvas at ~16M pixels and ~4096px per side, so iOS
+// devices (incl. iPad in landscape, which can be wider than 900px) must use
+// scale 2 (1920×2 = 3840px). Desktop browsers handle the sharper scale 3.
+function getCertScale() {
+  if (typeof window === 'undefined') return 2;
+  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isNarrow = window.matchMedia('(max-width: 900px)').matches;
+  return (isIOS || isNarrow) ? 2 : 3;
+}
+
 const CERT_ASSET_URLS = {
   edges: [encodeURI('/images/edges .png'), '/images/edges%20.png'],
   divide: ['/images/divide.png'],
@@ -322,7 +334,7 @@ async function generateHeritageCertificate(name, day, dateDisplay, gender, data)
 
   const W = CERT_W;
   const H = CERT_H;
-  const SCALE = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches ? 2 : 3;
+  const SCALE = getCertScale();
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
   canvas.height = H * SCALE;
@@ -556,7 +568,7 @@ async function generateNamingCertificate(name, day, dateDisplay, gender, data, b
 
   const W = CERT_W;
   const H = CERT_H;
-  const SCALE = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches ? 2 : 3;
+  const SCALE = getCertScale();
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
   canvas.height = H * SCALE;

@@ -13,6 +13,8 @@
 
 # misc
 .DS_Store
+# Real credentials live here — never commit it. .env.example documents the keys.
+.env
 .env.local
 .env.development.local
 .env.test.local

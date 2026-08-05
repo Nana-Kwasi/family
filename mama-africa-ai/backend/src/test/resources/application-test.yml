@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:mama-africa;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+
+app:
+  security:
+    jwt:
+      secret: test-secret-key-that-is-long-enough-for-hmac-sha-256
+      expiration: 1h
+      issuer: mama-africa-ai
+    bootstrap:
+      email: admin@test.local
+      password: TestPassword123!
+      full-name: Test Admin
+    public-api-key: ""

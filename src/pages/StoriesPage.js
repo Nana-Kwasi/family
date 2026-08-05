@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { fetchReviews, fetchStories, recordBookRead, submitReview } from '../utils/cultureApi';
 import { bookSections, bookMeta } from '../data/bookContent';
 import { notifyAfiaBookFeedback } from '../utils/emailjs';
 import { drumsCallHomeStories } from '../data/drumsCallHomeStories';
-import { products } from '../data/products';
+import { useCatalog } from '../contexts/CatalogContext';
 import { trackEvent } from '../utils/analytics';
 import { HeritageLongformBlocks } from '../components/HeritageLongformEssay';
 import ModalShell from '../components/ui/ModalShell';
@@ -165,17 +162,12 @@ function StoryFeedbackSection({ story }) {
 
   useEffect(() => {
     if (!story?.id) return undefined;
-    const q = query(
-      collection(db, 'storyReviews'),
-      where('storyId', '==', story.id),
-      orderBy('createdAt', 'desc')
-    );
-    return onSnapshot(
-      q,
-      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => {},
-    );
-  }, [story?.id]);
+    let cancelled = false;
+    fetchReviews('STORY', story.id)
+      .then((list) => { if (!cancelled) setReviews(list); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [story?.id, submitted]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -183,13 +175,13 @@ function StoryFeedbackSection({ story }) {
     if (!form.comment.trim()) { setError('Please write a comment.'); return; }
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'storyReviews'), {
-        storyId: story.id,
-        storyTitle: story.title || story.type || 'Story',
+      await submitReview({
+        subject: 'STORY',
+        subjectId: story.id,
+        subjectTitle: story.title || story.type || 'Story',
         name: form.name.trim() || 'Anonymous',
         rating: form.rating,
         comment: form.comment.trim(),
-        createdAt: serverTimestamp(),
       });
       await notifyAfiaBookFeedback({
         name: form.name || 'Anonymous',
@@ -297,19 +289,18 @@ function BookModal({ onClose }) {
   const currentSection = bookSections[currentIndex] || bookSections[0];
 
   useEffect(() => {
-    const q = query(collection(db, 'bookReviews'), orderBy('createdAt', 'desc'));
-    return onSnapshot(
-      q,
-      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => {},
-    );
-  }, []);
+    let cancelled = false;
+    fetchReviews('BOOK')
+      .then((list) => { if (!cancelled) setReviews(list); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [submitted]);
 
   // Record read once per session
   useEffect(() => {
     if (!sessionStorage.getItem('afia_book_read')) {
       sessionStorage.setItem('afia_book_read', '1');
-      addDoc(collection(db, 'bookReads'), { readAt: serverTimestamp() }).catch(() => {});
+      recordBookRead();
     }
   }, []);
 
@@ -332,11 +323,12 @@ function BookModal({ onClose }) {
     if (!reviewForm.comment.trim()) { setReviewError('Please write a comment.'); return; }
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'bookReviews'), {
+      await submitReview({
+        subject: 'BOOK',
+        subjectTitle: 'Outdooring (Aba-Dinto)',
         name: reviewForm.name.trim() || 'Anonymous',
         rating: reviewForm.rating,
         comment: reviewForm.comment.trim(),
-        createdAt: serverTimestamp(),
       });
       await notifyAfiaBookFeedback({ name: reviewForm.name, rating: reviewForm.rating, comment: reviewForm.comment, book_title: 'Outdooring (Aba-Dinto)' }).catch(() => {});
       setSubmitted(true);
@@ -506,7 +498,7 @@ function StorybookShelfCard({ title, subtitle, meta, onOpen }) {
   );
 }
 
-function getStorySuggestedProducts(story) {
+function getStorySuggestedProducts(products, story) {
   const hay = `${story?.title || ''} ${story?.subtitle || ''} ${story?.content || ''} ${story?.intro || ''}`.toLowerCase();
   const tshirts = products.filter(p => p.type === 'tshirt').slice(0, 2);
   if (hay.includes('baby') || hay.includes('newborn') || hay.includes('naming') || hay.includes('outdooring')) {
@@ -628,7 +620,8 @@ function InspiredGiftsSection({ products, storyId, onPickProduct }) {
 
 function HeritageEssayReadModal({ entry, onClose }) {
   const { shelfMeta, meta, blocks } = entry;
-  const suggestedProducts = getStorySuggestedProducts({
+  const { products } = useCatalog();
+  const suggestedProducts = getStorySuggestedProducts(products, {
     title: meta.title,
     subtitle: meta.subtitle,
     content: '',
@@ -728,9 +721,10 @@ function ChapterStoryModal({ story, onClose }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [tocOpen, setTocOpen] = useState(false);
   const contentRef = useRef(null);
+  const { products } = useCatalog();
   const chapters = story.chapters || [];
   const current = chapters[activeIndex] || null;
-  const suggestedProducts = getStorySuggestedProducts(story);
+  const suggestedProducts = getStorySuggestedProducts(products, story);
 
   useEffect(() => {
     trackEvent('open_story_modal', {
@@ -853,8 +847,9 @@ function ChapterStoryModal({ story, onClose }) {
 }
 
 function StoryReadModal({ story, onClose }) {
+  const { products } = useCatalog();
   const date = story.createdAt?.toDate?.() || (story.createdAt ? new Date(story.createdAt) : null);
-  const suggestedProducts = getStorySuggestedProducts(story);
+  const suggestedProducts = getStorySuggestedProducts(products, story);
 
   useEffect(() => {
     trackEvent('open_story_modal', {
@@ -918,21 +913,15 @@ function StoryCard({ story, onOpenRead }) {
   const hasLinks = story.socialLinks?.length > 0;
   const showReviews = isShort;
 
-  // Load this story's reviews from Firestore
+  // Reviews come from the Culture API; re-fetched once a submission lands so the new one shows.
   useEffect(() => {
-    if (!showReviews) return;
-    const q = query(
-      collection(db, 'storyReviews'),
-      where('storyId', '==', story.id),
-      orderBy('createdAt', 'desc')
-    );
-    const unsub = onSnapshot(
-      q,
-      snap => setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => {},
-    );
-    return () => unsub();
-  }, [story.id, showReviews]);
+    if (!showReviews) return undefined;
+    let cancelled = false;
+    fetchReviews('STORY', story.id)
+      .then((list) => { if (!cancelled) setReviews(list); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [story.id, showReviews, submitted]);
 
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -944,13 +933,13 @@ function StoryCard({ story, onOpenRead }) {
     if (!form.comment.trim()) { setFormError('Please write a comment.'); return; }
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'storyReviews'), {
-        storyId: story.id,
-        storyTitle: story.title || story.type,
+      await submitReview({
+        subject: 'STORY',
+        subjectId: story.id,
+        subjectTitle: story.title || story.type,
         name: form.name.trim() || 'Anonymous',
         rating: form.rating,
         comment: form.comment.trim(),
-        createdAt: serverTimestamp(),
       });
       await notifyAfiaBookFeedback({
         name: form.name || 'Anonymous',
@@ -1139,12 +1128,11 @@ export default function StoriesPage() {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'));
-    return onSnapshot(
-      q,
-      snap => setAdminStories(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => {},
-    );
+    let cancelled = false;
+    fetchStories()
+      .then((list) => { if (!cancelled) setAdminStories(list); })
+      .catch(() => { if (!cancelled) setAdminStories([]); });
+    return () => { cancelled = true; };
   }, []);
 
   // Body scroll lock is handled inside ModalShell for each modal.

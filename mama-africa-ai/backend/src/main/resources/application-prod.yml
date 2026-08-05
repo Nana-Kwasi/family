@@ -1,0 +1,38 @@
+# Activated with SPRING_PROFILES_ACTIVE=prod.
+# ProductionSafetyCheck refuses to start if development placeholders are still in place.
+
+spring:
+  jpa:
+    show-sql: false
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+  # Behind a load balancer or ingress that terminates TLS.
+  forward-headers-strategy: framework
+
+# The API contract is internal; do not publish it publicly.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    com.mamaafrica.ai: INFO
+
+ai:
+  # Never log prompts or completions in production — they contain user messages.
+  log-requests: false
